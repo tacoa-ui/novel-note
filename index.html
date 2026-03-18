@@ -8,241 +8,699 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --lime: #A6F21A; --bg: #000000; }
-        body { background-color: var(--bg); color: white; padding-bottom: 120px; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: white; padding-bottom: 110px; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
         .text-lime { color: var(--lime); }
         .bg-lime { background-color: var(--lime); color: black; }
+        .border-lime { border-color: var(--lime); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .ad-card { min-width: 85vw; height: 160px; scroll-snap-align: center; }
         
-        /* 🚨 ここが重要：タブの切り替えを「絶対」にする */
-        .tab-content { display: none; } /* 基本は全部消す */
-        .tab-content.active { display: block; } /* activeクラスがある時だけ出す */
+        /* 画面隔離システム */
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: pageIn 0.3s ease-out; }
+        @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ボタン・UI */
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 9px; font-weight: bold; color: #666; transition: 0.3s; }
+        .nav-btn.active { color: var(--lime); }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
         
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 9px; font-weight: bold; }
-        input, textarea, select { background-color: rgba(255,255,255,0.1) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+        /* ライブ専用：コメントアニメーション */
+        .comment-item { animation: commentSlide 0.2s ease-out; }
+        @keyframes commentSlide { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        
+        /* 数字のカウントアップ演出 */
+        .count-up { transition: all 0.5s ease; transform: scale(1.2); color: var(--lime); }
+
+        input, textarea, select { background: rgba(255,255,255,0.1) !important; color: white !important; border-radius: 12px; padding: 12px; outline: none; border: 1px solid transparent; }
+        input:focus { border-color: var(--lime); }
+        
+        .badge-top { background: linear-gradient(45deg, #FFD700, #FFA500); color: black; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 9px; }
     </style>
 </head>
 <body>
 
-    <header class="sticky top-0 z-50 bg-black/95 backdrop-blur-md p-4 pb-2 space-y-3 border-b border-white/5">
-        <div class="relative">
-            <i class="fa fa-search absolute left-4 top-3 text-gray-500"></i>
-            <input type="text" placeholder="作者・タイトル・タグ・ライブ・room" class="w-full py-2.5 pl-11 pr-4 rounded-full text-sm outline-none">
+    <header class="sticky top-0 z-50 bg-black/95 p-4 border-b border-white/5">
+        <div class="relative mb-3">
+            <i class="fa fa-search absolute left-4 top-3.5 text-gray-500"></i>
+            <input type="text" id="global-search" oninput="handleSearch()" placeholder="作者・タイトル・タグ・ライブ・room" class="w-full pl-12 pr-4 py-3 rounded-full text-sm">
         </div>
-        <h1 class="text-3xl font-black text-lime tracking-tighter">小説note</h1>
+        <h1 class="text-3xl font-black text-lime italic tracking-tighter">小説note</h1>
     </header>
 
-    <main>
-        <section id="tab-home" class="tab-content active p-4 space-y-10">
+    <main id="main-content">
+        
+        <section id="page-home" class="page-section active p-4 space-y-8">
             <div class="flex overflow-x-auto gap-4 no-scrollbar snap-x">
-                <div class="ad-card bg-gradient-to-br from-lime-400 to-green-600 rounded-[2rem] p-6 flex flex-col justify-center text-black">
-                    <h2 class="text-lg font-black leading-tight">理想の物語は<br>あなたしか書けない</h2>
-                    <p class="text-[10px] mt-1 font-bold opacity-70">さぁ思いっきり楽しもう！</p>
-                    <button onclick="showModal('modal-terms')" class="mt-4 bg-black text-white text-[10px] px-4 py-2 rounded-full w-fit">利用規約を見る</button>
-                </div>
-                <div class="ad-card bg-white/10 rounded-[2rem] p-6 flex flex-col justify-center border border-white/10 text-lime">
-                    <h2 class="text-xl font-black">連載は自由。<br>楽しむのも自由。</h2>
-                </div>
-                <div class="ad-card bg-blue-600 rounded-[2rem] p-6 flex flex-col justify-center text-white">
-                    <h2 class="text-xl font-black">あなたのファンは<br>ここに</h2>
-                </div>
-            </div>
-
-            <div class="space-y-8">
-                <div><h3 class="font-bold text-sm mb-4"><span class="w-2 h-2 bg-red-600 inline-block rounded-full animate-pulse mr-2"></span> ライブ配信中のライブ</h3><p class="text-gray-600 text-xs italic">配信はありません</p></div>
-                <div><h3 class="font-bold text-sm text-lime mb-4">フォロー中の作品</h3><p class="text-gray-600 text-xs">更新はありません</p></div>
-                <div><h3 class="font-bold text-sm text-lime mb-4">新着の購読中のroom</h3><p class="text-gray-600 text-xs">更新はありません</p></div>
-                <div><h3 class="font-bold text-sm mb-4">TOPクリエイター一覧</h3><div id="home-creators" class="flex gap-4 overflow-x-auto no-scrollbar"></div></div>
-            </div>
-        </section>
-
-        <section id="tab-ranking" class="tab-content p-4 space-y-12">
-            <div><h3 class="font-black text-xl mb-6">TOP 作品 40</h3><div class="grid grid-cols-2 gap-4" id="rank-works"></div></div>
-            <div><h3 class="font-black text-xl mb-6">TOP room 40</h3><div class="grid grid-cols-2 gap-4" id="rank-rooms"></div></div>
-            <div><h3 class="font-black text-xl mb-6">最新の作品 40</h3><div class="grid grid-cols-2 gap-4" id="rank-latest"></div></div>
-            <div><h3 class="font-black text-xl mb-6 text-yellow-500 italic">連続TOPの作品</h3><div class="grid grid-cols-2 gap-4" id="rank-streak"></div></div>
-        </section>
-
-        <section id="tab-library" class="tab-content p-4">
-            <h2 class="text-2xl font-black mb-6">マイライブラリ</h2>
-            <div id="lib-grid" class="grid grid-cols-2 gap-4"></div>
-        </section>
-
-        <section id="tab-post" class="tab-content p-4 space-y-4">
-            <h2 class="text-2xl font-black border-b border-white/10 pb-2">作品を創る</h2>
-            <div class="bg-white/5 h-40 rounded-3xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center relative overflow-hidden">
-                <input type="file" class="absolute inset-0 opacity-0 z-10" accept="image/*" onchange="previewPostImg(this)">
-                <img id="p-img-view" class="absolute inset-0 w-full h-full object-cover hidden">
-                <div id="p-img-label" class="text-center text-gray-500 text-xs"><i class="fa fa-image text-2xl mb-1"></i><p>表紙画像を選択</p></div>
-            </div>
-            <input type="text" id="p-title" placeholder="タイトル" class="w-full p-4 rounded-xl outline-none">
-            <textarea id="p-body" placeholder="物語を書きましょう..." class="w-full p-4 rounded-xl h-48 outline-none"></textarea>
-            <button onclick="publishWork()" class="w-full bg-lime text-black py-4 rounded-2xl font-black text-lg">投稿する</button>
-        </section>
-
-        <section id="tab-live" class="tab-content p-6 space-y-8 flex flex-col items-center">
-            <div class="w-40 h-40 rounded-full bg-white/5 border-4 border-lime flex items-center justify-center text-6xl relative overflow-hidden shadow-[0_0_30px_rgba(166,242,26,0.2)]">
-                <img id="live-my-icon" class="w-full h-full object-cover hidden">
-                <span id="live-emoji">👤</span>
-            </div>
-            <div class="w-full bg-white/5 p-5 rounded-[2rem] border border-white/10">
-                <p class="text-[10px] text-lime font-bold mb-2 uppercase">Live Description</p>
-                <textarea id="live-status" class="w-full h-20 bg-transparent text-xs outline-none" placeholder="リスナーに今の状況を伝えよう..."></textarea>
-            </div>
-            <button id="live-toggle" onclick="toggleMic()" class="w-full bg-white text-black py-5 rounded-[2rem] font-black text-xl shadow-xl">録音を開始する</button>
-            <div class="grid grid-cols-3 gap-2 w-full">
-                <button onclick="setVoice('normal')" class="v-btn bg-lime text-black py-3 rounded-xl text-[10px] font-bold">ノーマル</button>
-                <button onclick="setVoice('echo')" class="v-btn bg-white/10 py-3 rounded-xl text-[10px] font-bold text-white">エコー</button>
-                <button onclick="setVoice('robot')" class="v-btn bg-white/10 py-3 rounded-xl text-[10px] font-bold text-white">ロボット</button>
-            </div>
-        </section>
-
-        <section id="tab-profile" class="tab-content p-6 space-y-8">
-            <div class="flex items-center gap-6">
-                <div class="w-24 h-24 rounded-full bg-white/5 border-2 border-lime relative overflow-hidden">
-                    <input type="file" class="absolute inset-0 opacity-0 z-10" onchange="updateProfileIcon(this)">
-                    <img id="u-icon-view" class="w-full h-full object-cover hidden">
-                    <div class="absolute inset-0 flex items-center justify-center text-gray-500 text-xs"><i class="fa fa-camera"></i></div>
-                </div>
-                <div class="flex-1 space-y-3">
-                    <div class="space-y-1">
-                        <p class="text-[10px] text-lime font-bold">名前の変更</p>
-                        <input type="text" id="u-name-input" class="w-full bg-white/10 p-2 rounded-lg font-black text-xl outline-none" placeholder="名前...">
+                <div class="min-w-full h-44 bg-lime rounded-[2rem] p-8 flex flex-col justify-between text-black snap-center">
+                    <div>
+                        <h2 class="text-xl font-black leading-tight">理想の物語は<br>あなたしか書けない</h2>
+                        <p class="text-[10px] font-bold opacity-70 mt-1">さぁ思いっきり楽しもう！</p>
                     </div>
-                    <button onclick="saveProfileData()" class="bg-white text-black text-xs px-6 py-2 rounded-full font-black uppercase">Save Change</button>
+                    <button onclick="showModal('modal-terms')" class="bg-black text-white text-[10px] px-6 py-2 rounded-full w-fit font-bold">利用規約を見る</button>
+                </div>
+                <div class="min-w-full h-44 bg-blue-600 rounded-[2rem] p-8 flex flex-col justify-center text-white snap-center">
+                    <h2 class="text-2xl font-black italic">連載は自由。<br>楽しむのも自由。</h2>
+                </div>
+                <div class="min-w-full h-44 bg-gray-900 border border-white/20 rounded-[2rem] p-8 flex flex-col justify-center text-lime snap-center text-center">
+                    <h2 class="text-2xl font-black">あなたのファンは<br>ここに</h2>
                 </div>
             </div>
-            <div class="flex gap-4 border-t border-white/5 pt-8">
-                <div class="flex-1 text-center bg-white/5 py-4 rounded-3xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Following</p><p class="text-xl font-black" id="u-count-ing">0</p></div>
-                <div class="flex-1 text-center bg-white/5 py-4 rounded-3xl"><p class="text-[8px] text-gray-500 uppercase font-bold">Followers</p><p class="text-xl font-black" id="u-count-ers">0</p></div>
+
+            <div id="home-live-section" class="hidden">
+                <h3 class="font-bold text-sm mb-4 flex items-center gap-2 text-red-500">
+                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> ライブ配信中のライブ
+                </h3>
+                <div id="home-live-list" class="grid grid-cols-1 gap-3"></div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-sm text-lime mb-4 tracking-widest uppercase">Following Works</h3>
+                <div id="home-follow-works" class="flex gap-4 overflow-x-auto no-scrollbar"></div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-sm text-lime mb-4 tracking-widest uppercase">New Room Updates</h3>
+                <div id="home-room-works" class="flex gap-4 overflow-x-auto no-scrollbar"></div>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-sm mb-4">TOPクリエイター</h3>
+                <div id="home-top-creators" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
             </div>
         </section>
+
+        <section id="page-ranking" class="page-section p-4 space-y-12">
+            <div><h3 class="font-black text-xl border-l-4 border-lime pl-3 mb-6 italic">TOP 作品 40</h3><div class="grid grid-cols-2 gap-4" id="rank-works"></div></div>
+            <div><h3 class="font-black text-xl border-l-4 border-lime pl-3 mb-6 italic">TOP room 40</h3><div class="grid grid-cols-2 gap-4" id="rank-rooms"></div></div>
+            <div><h3 class="font-black text-xl border-l-4 border-white pl-3 mb-6 italic">最新の作品 40</h3><div class="grid grid-cols-2 gap-4" id="rank-latest"></div></div>
+            <div><h3 class="font-black text-xl border-l-4 border-yellow-500 text-yellow-500 pl-3 mb-6 italic">連続TOPの作品</h3><div id="rank-streak" class="grid grid-cols-2 gap-4"></div></div>
+        </section>
+
+        <section id="page-post" class="page-section p-6 space-y-6">
+            <h2 class="text-3xl font-black mb-4">何を創りますか？</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="openEditor('work')" class="glass p-8 rounded-[2rem] text-left hover:border-lime transition-all">
+                    <i class="fa fa-book-open text-3xl text-lime mb-4"></i>
+                    <p class="font-black text-xl">作品を投稿</p>
+                    <p class="text-xs text-gray-500">単作またはシリーズの執筆</p>
+                </button>
+                <button onclick="openEditor('room')" class="glass p-8 rounded-[2rem] text-left hover:border-lime transition-all">
+                    <i class="fa fa-layer-group text-3xl text-lime mb-4"></i>
+                    <p class="font-black text-xl">Roomを作成</p>
+                    <p class="text-xs text-gray-500">連作のまとめ、購読機能</p>
+                </button>
+            </div>
+        </section>
+
+        <section id="page-live" class="page-section p-4 space-y-6">
+            <div class="glass rounded-[2.5rem] p-6 flex flex-col items-center gap-6 border-lime/30 border-2">
+                <div class="relative">
+                    <div id="live-visualizer" class="absolute -inset-4 border-2 border-lime rounded-full animate-ping opacity-0"></div>
+                    <div class="w-32 h-32 rounded-full bg-gray-900 border-4 border-lime overflow-hidden flex items-center justify-center">
+                        <img id="live-host-icon" class="w-full h-full object-cover hidden">
+                        <i id="live-placeholder-icon" class="fa fa-user text-4xl text-gray-700"></i>
+                    </div>
+                </div>
+                
+                <div class="w-full space-y-2">
+                    <input type="text" id="live-name-input" placeholder="ライブタイトルを入力..." class="w-full text-center font-black bg-transparent border-none text-xl">
+                    <textarea id="live-desc-input" placeholder="リスナーへのメッセージ（あらすじ・概要）" class="w-full bg-white/5 p-4 rounded-2xl text-xs h-20 resize-none"></textarea>
+                </div>
+
+                <div class="flex flex-col items-center gap-2">
+                    <p id="live-viewers" class="text-lime font-black text-lg transition-all">0 Viewers</p>
+                    <button id="live-toggle-btn" onclick="toggleLiveState()" class="bg-white text-black px-12 py-4 rounded-full font-black text-xl shadow-xl active:scale-95 transition-all">
+                        録音を開始する
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 w-full">
+                    <button onclick="setVoiceEffect('none')" class="voice-btn bg-lime text-black py-3 rounded-xl text-[10px] font-bold">ノーマル</button>
+                    <button onclick="setVoiceEffect('echo')" class="voice-btn bg-white/5 py-3 rounded-xl text-[10px] font-bold">エコー</button>
+                    <button onclick="setVoiceEffect('robot')" class="voice-btn bg-white/5 py-3 rounded-xl text-[10px] font-bold">ロボット</button>
+                </div>
+            </div>
+
+            <div class="glass rounded-[2rem] p-6 h-[300px] flex flex-col">
+                <p class="text-[10px] font-bold text-gray-500 mb-4 uppercase tracking-widest">Live Comments</p>
+                <div id="live-comments" class="flex-1 overflow-y-auto space-y-3 no-scrollbar mb-4 italic text-gray-600 text-xs">
+                    配信を開始すると、リスナーとの交流が始まります...
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="live-msg-input" placeholder="メッセージ..." class="flex-1 text-xs">
+                    <button onclick="sendLiveComment()" class="bg-lime text-black px-4 rounded-xl"><i class="fa fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-library" class="page-section p-4 space-y-8">
+            <div class="flex border-b border-white/10">
+                <button onclick="switchLibTab('my')" id="lib-tab-my" class="flex-1 py-4 font-black border-b-2 border-lime text-lime">自分の作品</button>
+                <button onclick="switchLibTab('bookmark')" id="lib-tab-bk" class="flex-1 py-4 font-black border-b-2 border-transparent text-gray-500">ブックマーク</button>
+            </div>
+            <div id="lib-content" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <section id="page-profile" class="page-section p-6 space-y-8">
+            <div class="flex flex-col items-center gap-6">
+                <div class="relative w-32 h-32 rounded-full border-2 border-lime p-1">
+                    <div class="w-full h-full rounded-full overflow-hidden bg-gray-900 flex items-center justify-center">
+                        <img id="my-icon-preview" class="w-full h-full object-cover hidden">
+                        <i id="my-icon-none" class="fa fa-camera text-2xl text-gray-600"></i>
+                    </div>
+                    <input type="file" accept="image/*" onchange="updateProfileIcon(this)" class="absolute inset-0 opacity-0 cursor-pointer">
+                </div>
+                
+                <div class="w-full text-center space-y-2">
+                    <input type="text" id="my-name-input" class="text-2xl font-black bg-transparent border-none text-center w-full" placeholder="名前を入力">
+                    <textarea id="my-bio-input" class="text-xs text-gray-400 bg-transparent border-none text-center w-full h-12" placeholder="一言設定（あらすじ風に自分を紹介）"></textarea>
+                    <button onclick="saveProfile()" class="bg-white text-black px-8 py-2 rounded-full font-black text-xs uppercase mt-2">Update Profile</button>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="showUserList('following')" class="flex-1 glass py-5 rounded-[2rem] text-center">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase">Following</p>
+                    <p class="text-2xl font-black" id="my-following-count">0</p>
+                </button>
+                <button onclick="showUserList('followers')" class="flex-1 glass py-5 rounded-[2rem] text-center">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase">Followers</p>
+                    <p class="text-2xl font-black" id="my-followers-count">0</p>
+                </button>
+            </div>
+
+            <div class="glass rounded-[2rem] p-6 space-y-4">
+                <h3 class="font-black text-sm text-lime italic"><i class="fa fa-bell mr-2"></i>通知設定</h3>
+                <div class="space-y-3" id="notif-settings"></div>
+            </div>
+        </section>
+
     </main>
 
-    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-xl border-t border-white/10 flex justify-around p-4 pb-8 z-[60]">
-        <button onclick="switchTab('home')" class="nav-btn text-lime"><i class="fa fa-house text-2xl"></i><span>ホーム</span></button>
-        <button onclick="switchTab('ranking')" class="nav-btn text-gray-600"><i class="fa fa-trophy text-2xl"></i><span>ランキング</span></button>
-        <button onclick="switchTab('library')" class="nav-btn text-gray-600"><i class="fa fa-book text-2xl"></i><span>書庫</span></button>
-        <button onclick="switchTab('post')" class="nav-btn text-gray-600"><i class="fa fa-pencil text-2xl"></i><span>投稿</span></button>
-        <button onclick="switchTab('live')" class="nav-btn text-gray-600"><i class="fa fa-microphone text-2xl"></i><span>ライブ</span></button>
-        <button onclick="switchTab('profile')" class="nav-btn text-gray-600"><i class="fa fa-face-smile text-2xl"></i><span>プロフ</span></button>
+    <div id="editor-modal" class="fixed inset-0 bg-black z-[100] hidden flex flex-col p-6 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="editor-title" class="text-2xl font-black">作品投稿</h2>
+            <button onclick="closeEditor()" class="text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-6">
+            <div class="w-full h-48 bg-white/5 border-2 border-dashed border-white/20 rounded-[2rem] relative flex flex-col items-center justify-center overflow-hidden">
+                <img id="edit-cover-preview" class="absolute inset-0 w-full h-full object-cover hidden">
+                <i class="fa fa-image text-3xl mb-2 text-gray-600"></i>
+                <p class="text-[10px] font-bold text-gray-500">表紙写真を選択</p>
+                <input type="file" accept="image/*" onchange="previewCover(this)" class="absolute inset-0 opacity-0">
+            </div>
+
+            <input type="text" id="edit-title" placeholder="作品タイトル" class="w-full">
+            <textarea id="edit-desc" placeholder="あらすじ・説明文" class="w-full h-24"></textarea>
+            <textarea id="edit-body" placeholder="本文を入力してください..." class="w-full h-64"></textarea>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" id="edit-tags" placeholder="タグ (例: 恋愛, SF)">
+                <select id="edit-room-id" class="w-full"><option value="">Roomを選択しない</option></select>
+            </div>
+
+            <div class="flex items-center justify-between glass p-4 rounded-2xl">
+                <span class="text-sm font-bold">公開範囲</span>
+                <select id="edit-privacy" class="bg-transparent border-none text-xs">
+                    <option value="public">全体公開</option>
+                    <option value="follower">フォロワー限定</option>
+                    <option value="private">非公開</option>
+                </select>
+            </div>
+
+            <button onclick="submitWork()" id="submit-btn" class="w-full bg-lime text-black py-5 rounded-[2rem] font-black text-xl">作品を公開する</button>
+        </div>
+    </div>
+
+    <div id="user-list-modal" class="fixed inset-0 bg-black/95 z-[110] hidden flex flex-col p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 id="user-list-title" class="text-2xl font-black italic">Users</h2>
+            <button onclick="hideModal('user-list-modal')" class="text-3xl">&times;</button>
+        </div>
+        <div id="user-list-content" class="space-y-4 overflow-y-auto flex-1"></div>
+    </div>
+
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-xl border-t border-white/10 flex justify-around p-4 pb-8 z-50">
+        <button onclick="switchTab('home')" class="nav-btn active"><i class="fa fa-house"></i><span>ホーム</span></button>
+        <button onclick="switchTab('ranking')" class="nav-btn"><i class="fa fa-trophy"></i><span>ランキング</span></button>
+        <button onclick="switchTab('post')" class="nav-btn"><i class="fa fa-pencil"></i><span>投稿</span></button>
+        <button onclick="switchTab('library')" class="nav-btn"><i class="fa fa-book"></i><span>書庫</span></button>
+        <button onclick="switchTab('live')" class="nav-btn"><i class="fa fa-microphone"></i><span>ライブ</span></button>
+        <button onclick="switchTab('profile')" class="nav-btn"><i class="fa fa-face-smile"></i><span>プロフ</span></button>
     </nav>
 
-    <div id="modal-terms" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-8">
-        <div class="bg-gray-900 p-8 rounded-[2rem] border border-white/10 max-w-xs w-full">
-            <h2 class="text-xl font-black mb-4 text-lime italic underline">利用規約</h2>
-            <ul class="text-[10px] space-y-3 text-gray-400 font-bold list-decimal pl-4">
+    <div id="modal-terms" class="fixed inset-0 bg-black/98 z-[200] hidden flex items-center justify-center p-8">
+        <div class="glass p-10 rounded-[3rem] max-w-sm w-full space-y-6">
+            <h2 class="text-2xl font-black text-lime italic underline underline-offset-8">利用規約</h2>
+            <ul class="text-xs text-gray-400 space-y-4 font-bold list-disc pl-4">
                 <li>著作権の責任は一切負いません。</li>
                 <li>商用利用に関する責任は一切負いません。</li>
-                <li>投稿内容は自己責任でお願いします。</li>
+                <li>内容は適切かどうか確認してからにしてください。責任は負いません。</li>
             </ul>
-            <button onclick="hideModal('modal-terms')" class="w-full bg-lime text-black font-black py-4 rounded-2xl mt-8">閉じる</button>
+            <button onclick="hideModal('modal-terms')" class="w-full bg-lime text-black py-4 rounded-2xl font-black">同意して閉じる</button>
         </div>
     </div>
 
     <script>
-        // --- データ管理 ---
-        let db = JSON.parse(localStorage.getItem('NOVEL_NOTE_FINAL_STABLE')) || {
-            me: { name: 'あなた', icon: '', following: [], followers: [] },
-            works: [], rooms: []
+        /* --- 🛠 データベース & 初期化 --- */
+        let db = JSON.parse(localStorage.getItem('NOVEL_NOTE_2026_MASTER')) || {
+            me: { 
+                name: '', bio: '', icon: '', 
+                following: [], followers: [], 
+                bookmarks: [],
+                settings: { like: true, comment: true, bookmark: true, follow: true, sub: true }
+            },
+            works: [], 
+            rooms: [],
+            live: { active: false, title: '', host: '', viewers: 0 }
         };
-        const save = () => localStorage.setItem('NOVEL_NOTE_FINAL_STABLE', JSON.stringify(db));
 
-        // --- タブ切り替えロジック (ここが修正のキモ！) ---
-        function switchTab(id) {
-            // 1. 全てのセクションを隠す
-            document.querySelectorAll('.tab-content').forEach(section => {
-                section.classList.remove('active');
-            });
-            // 2. 指定したIDのセクションだけ出す
-            const target = document.getElementById('tab-' + id);
-            if(target) target.classList.add('active');
+        const save = () => localStorage.setItem('NOVEL_NOTE_2026_MASTER', JSON.stringify(db));
 
-            // 3. ナビゲーションの色を変える
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.replace('text-lime', 'text-gray-600');
-            });
-            event.currentTarget.classList.replace('text-gray-600', 'text-lime');
+        // 運営アカウントの定義
+        const ADMIN_USER = { name: "運営", icon: "", bio: "システム管理者です。" };
+
+        /* --- 🔊 本気のライブ音声加工 (Web Audio API) --- */
+        let audioCtx, micStream, source, processor, delayNode, filterNode;
+        
+        async function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                source = audioCtx.createMediaStreamSource(micStream);
+                
+                // エコー用
+                delayNode = audioCtx.createDelay();
+                delayNode.delayTime.value = 0.4;
+                let feedback = audioCtx.createGain();
+                feedback.gain.value = 0.4;
+                delayNode.connect(feedback);
+                feedback.connect(delayNode);
+
+                // ロボット用（極端なフィルタ）
+                filterNode = audioCtx.createBiquadFilter();
+                filterNode.type = 'peaking';
+                filterNode.frequency.value = 1000;
+                filterNode.Q.value = 10;
+                filterNode.gain.value = 20;
+
+                setVoiceEffect('none');
+            } catch (err) {
+                console.warn("マイクが見つかりません。シミュレーションモードで動作します。");
+            }
+        }
+
+        function setVoiceEffect(type) {
+            if (!source) return;
+            source.disconnect();
+            delayNode.disconnect();
+            filterNode.disconnect();
+
+            if (type === 'none') {
+                source.connect(audioCtx.destination);
+            } else if (type === 'echo') {
+                source.connect(delayNode);
+                delayNode.connect(audioCtx.destination);
+                source.connect(audioCtx.destination);
+            } else if (type === 'robot') {
+                source.connect(filterNode);
+                filterNode.connect(audioCtx.destination);
+            }
             
-            window.scrollTo(0,0);
-            if(id === 'home') renderHome();
-            if(id === 'ranking') renderRankings();
-            if(id === 'library') renderLib();
+            document.querySelectorAll('.voice-btn').forEach(b => {
+                b.classList.remove('bg-lime', 'text-black');
+                b.classList.add('bg-white/5', 'text-white');
+            });
+            event.target.classList.add('bg-lime', 'text-black');
         }
 
-        function loadProfile() {
-            document.getElementById('u-name-input').value = db.me.name;
-            if(db.me.icon) {
-                document.getElementById('u-icon-view').src = db.me.icon;
-                document.getElementById('u-icon-view').classList.remove('hidden');
-                document.getElementById('live-my-icon').src = db.me.icon;
-                document.getElementById('live-my-icon').classList.remove('hidden');
-                document.getElementById('live-emoji').classList.add('hidden');
+        /* --- 📱 タブ切り替えシステム --- */
+        function switchTab(id) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + id).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            window.scrollTo(0, 0);
+            renderAll();
+        }
+
+        /* --- 🖋 投稿システム --- */
+        let currentEditingType = 'work';
+        function openEditor(type) {
+            currentEditingType = type;
+            document.getElementById('editor-modal').classList.remove('hidden');
+            document.getElementById('editor-title').innerText = type === 'work' ? '作品を公開' : 'Roomを作成';
+            document.getElementById('edit-body').classList.toggle('hidden', type === 'room');
+            
+            // Room選択肢の更新
+            const roomSel = document.getElementById('edit-room-id');
+            roomSel.innerHTML = '<option value="">Roomを選択しない</option>' + 
+                db.rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        }
+
+        function closeEditor() {
+            document.getElementById('editor-modal').classList.add('hidden');
+        }
+
+        function previewCover(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.getElementById('edit-cover-preview');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
-        function saveProfileData() {
-            db.me.name = document.getElementById('u-name-input').value || 'あなた';
-            save(); alert("保存完了！投稿者名もこれになります。");
-        }
+        function submitWork() {
+            const title = document.getElementById('edit-title').value;
+            const desc = document.getElementById('edit-desc').value;
+            const body = document.getElementById('edit-body').value;
+            const cover = document.getElementById('edit-cover-preview').src;
+            const tags = document.getElementById('edit-tags').value.split(',').map(t => t.trim());
+            const privacy = document.getElementById('edit-privacy').value;
+            const roomId = document.getElementById('edit-room-id').value;
 
-        function updateProfileIcon(input) {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => { db.me.icon = e.target.result; save(); loadProfile(); };
-                r.readAsDataURL(input.files[0]);
+            // 全て揃わないと投稿できない
+            if (!title || !desc || (currentEditingType === 'work' && !body) || !cover || !db.me.icon || !db.me.name) {
+                return alert("タイトル、説明、画像、本文、そしてプロフ設定が全て完了していないと投稿できません！");
             }
-        }
 
-        function previewPostImg(input) {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => { document.getElementById('p-img-view').src = e.target.result; document.getElementById('p-img-view').classList.remove('hidden'); document.getElementById('p-img-label').classList.add('hidden'); };
-                r.readAsDataURL(input.files[0]);
+            if (currentEditingType === 'work') {
+                db.works.unshift({
+                    id: Date.now(), title, desc, body, cover, tags, privacy, roomId,
+                    author: db.me.name, authorIcon: db.me.icon, likes: 0, bookmarks: 0, createdAt: new Date()
+                });
+            } else {
+                db.rooms.unshift({
+                    id: Date.now(), name: title, desc, cover, author: db.me.name, subs: 0
+                });
             }
-        }
 
-        function publishWork() {
-            const t = document.getElementById('p-title').value;
-            const b = document.getElementById('p-body').value;
-            const img = document.getElementById('p-img-view').src;
-            if(!t || !b || img.includes('hidden')) return alert("入力が足りません！");
-            db.works.unshift({ id: Date.now(), title: t, body: b, cover: img, author: db.me.name, icon: db.me.icon, likes: 0 });
-            save(); alert("投稿しました！");
+            save();
+            closeEditor();
             switchTab('home');
         }
 
+        /* --- 🎨 レンダリングエンジン --- */
+        function renderAll() {
+            renderHome();
+            renderRanking();
+            renderLibrary();
+            renderProfile();
+        }
+
         function renderHome() {
-            document.getElementById('home-creators').innerHTML = db.works.slice(0, 8).map(w => `
-                <div class="flex flex-col items-center gap-1 min-w-[65px]">
-                    <div class="w-14 h-14 rounded-full border-2 border-lime overflow-hidden bg-white/5">
-                        ${w.icon ? `<img src="${w.icon}" class="w-full h-full object-cover">` : '<span class="text-2xl">👤</span>'}
+            // TOPクリエイター（スワイプ）
+            const topCreators = db.works.filter(w => isTopWork(w.id)).map(w => w.author);
+            const uniqueCreators = [...new Set(topCreators)];
+            
+            document.getElementById('home-top-creators').innerHTML = uniqueCreators.map(name => `
+                <div class="flex flex-col items-center gap-1 min-w-[70px]">
+                    <div class="w-14 h-14 rounded-full border-2 border-lime p-0.5">
+                        <div class="w-full h-full rounded-full bg-gray-900 overflow-hidden flex items-center justify-center">
+                            <span class="text-xl">👤</span>
+                        </div>
                     </div>
-                    <p class="text-[9px] font-bold truncate w-full text-center">${w.author}</p>
-                </div>`).join('');
+                    <p class="text-[8px] font-black truncate w-full text-center">${name}</p>
+                    <span class="badge-top">TOP</span>
+                </div>
+            `).join('');
+
+            // フォロー中の作品
+            const followWorks = db.works.filter(w => db.me.following.includes(w.author));
+            document.getElementById('home-follow-works').innerHTML = followWorks.length ? followWorks.map(renderSmallCard).join('') : '<p class="text-[10px] text-gray-600 italic">フォロー中の更新はありません</p>';
+
+            // Room作品
+            document.getElementById('home-room-works').innerHTML = db.works.filter(w => w.roomId).slice(0, 10).map(renderSmallCard).join('') || '<p class="text-[10px] text-gray-600 italic">新着Roomはありません</p>';
         }
 
-        function renderRankings() {
-            const mk = w => `<div class="bg-white/5 rounded-2xl overflow-hidden shadow-lg"><img src="${w.cover}" class="w-full h-24 object-cover"><div class="p-2"><p class="font-bold text-[10px] truncate">${w.title}</p><p class="text-[8px] text-gray-500">by ${w.author}</p></div></div>`;
-            document.getElementById('rank-latest').innerHTML = db.works.slice(0, 40).map(mk).join('');
-            document.getElementById('rank-works').innerHTML = [...db.works].sort((a,b)=>b.likes-a.likes).slice(0, 40).map(mk).join('');
+        function renderSmallCard(w) {
+            return `
+                <div class="min-w-[140px] glass rounded-2xl overflow-hidden relative">
+                    <img src="${w.cover}" class="w-full h-24 object-cover">
+                    <div class="p-2">
+                        <p class="text-[10px] font-black truncate">${w.title}</p>
+                        <p class="text-[8px] text-gray-500">${w.author}</p>
+                    </div>
+                </div>
+            `;
         }
 
-        function renderLib() {
-            document.getElementById('lib-grid').innerHTML = db.works.map(w => `<div class="bg-white/5 rounded-xl overflow-hidden p-2 flex items-center gap-3"><img src="${w.cover}" class="w-10 h-10 object-cover rounded"><p class="font-bold text-[10px] truncate">${w.title}</p></div>`).join('');
+        function renderRanking() {
+            const topWorks = [...db.works].sort((a,b) => b.likes - a.likes).slice(0, 40);
+            document.getElementById('rank-works').innerHTML = topWorks.map(renderRankCard).join('');
+            
+            const topRooms = [...db.rooms].sort((a,b) => b.subs - a.subs).slice(0, 40);
+            document.getElementById('rank-rooms').innerHTML = topRooms.map(r => `
+                <div class="glass p-3 rounded-2xl border border-lime/20">
+                    <p class="text-[10px] font-black text-lime truncate">${r.name}</p>
+                    <p class="text-[8px] text-gray-500">Subscribers: ${r.subs}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('rank-latest').innerHTML = db.works.slice(0, 40).map(renderRankCard).join('');
         }
 
-        function toggleMic() {
-            const btn = document.getElementById('live-toggle');
-            btn.innerText = btn.innerText.includes('開始') ? '配信を停止する' : '録音を開始する';
-            btn.classList.toggle('bg-red-600'); btn.classList.toggle('text-white');
+        function renderRankCard(w, idx) {
+            const isTop = isTopWork(w.id);
+            return `
+                <div class="glass rounded-2xl overflow-hidden relative">
+                    <img src="${w.cover}" class="w-full h-28 object-cover">
+                    <div class="p-2">
+                        <p class="text-[10px] font-black truncate">${w.title}</p>
+                        <div class="flex items-center gap-1 mt-1">
+                            <span class="text-[8px] text-gray-500">${w.author}</span>
+                            ${isTop ? '<span class="badge-top">TOP</span>' : ''}
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-[10px] font-black text-lime"><i class="fa fa-heart"></i> ${w.likes}</span>
+                            <button onclick="bookmarkWork(${w.id})" class="text-gray-500"><i class="fa fa-bookmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
+        function isTopWork(id) {
+            const sorted = [...db.works].sort((a,b) => b.likes - a.likes).slice(0, 40);
+            return sorted.some(w => w.id === id);
+        }
+
+        /* --- 🎙 ライブ機能の実装 --- */
+        let viewerCount = 0;
+        let isRecording = false;
+
+        function toggleLiveState() {
+            const btn = document.getElementById('live-toggle-btn');
+            const visualizer = document.getElementById('live-visualizer');
+            
+            if (!isRecording) {
+                const title = document.getElementById('live-name-input').value;
+                if (!title) return alert("ライブのタイトルを決めてください！");
+                
+                isRecording = true;
+                btn.innerText = "配信を停止する";
+                btn.classList.add('bg-red-600', 'text-white');
+                visualizer.classList.remove('opacity-0');
+                initAudio();
+                startViewerSim();
+                addComment("System", "ライブ配信を開始しました！", "var(--lime)");
+            } else {
+                isRecording = false;
+                btn.innerText = "録音を開始する";
+                btn.classList.remove('bg-red-600', 'text-white');
+                visualizer.classList.add('opacity-0');
+                if (micStream) micStream.getTracks().forEach(t => t.stop());
+                stopViewerSim();
+                addComment("System", "ライブ配信を終了しました。", "#666");
+            }
+        }
+
+        function startViewerSim() {
+            viewerCount = 0;
+            const viewerEl = document.getElementById('live-viewers');
+            window.liveInterval = setInterval(() => {
+                viewerCount += Math.floor(Math.random() * 5);
+                viewerEl.innerText = `${viewerCount} Viewers`;
+                viewerEl.classList.add('count-up');
+                setTimeout(() => viewerEl.classList.remove('count-up'), 500);
+                
+                if (Math.random() > 0.7) simulateComment();
+            }, 3000);
+        }
+
+        function stopViewerSim() {
+            clearInterval(window.liveInterval);
+            document.getElementById('live-viewers').innerText = "0 Viewers";
+        }
+
+        function simulateComment() {
+            const bots = ["ねこ丸", "通りすがり", "小説好き", "匿名希望", "ファンA"];
+            const texts = ["こんばんはー！", "その話、最高ですw", "声変えてるの面白い！", "888888888", "待ってました！"];
+            addComment(bots[Math.floor(Math.random()*bots.length)], texts[Math.floor(Math.random()*texts.length)]);
+        }
+
+        function addComment(user, text, color = "white") {
+            const box = document.getElementById('live-comments');
+            if (box.innerText.includes("配信を開始すると")) box.innerHTML = "";
+            const div = document.createElement('div');
+            div.className = "comment-item flex gap-2 text-[11px]";
+            div.innerHTML = `<span class="font-black" style="color:${color}">${user}:</span><span class="text-gray-200">${text}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendLiveComment() {
+            const input = document.getElementById('live-msg-input');
+            if (!input.value.trim() || !isRecording) return;
+            addComment(db.me.name || "あなた", input.value, "var(--lime)");
+            input.value = "";
+        }
+
+        /* --- 👤 プロフィール & 設定 --- */
+        function updateProfileIcon(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    db.me.icon = e.target.result;
+                    document.getElementById('my-icon-preview').src = e.target.result;
+                    document.getElementById('my-icon-preview').classList.remove('hidden');
+                    document.getElementById('my-icon-none').classList.add('hidden');
+                    document.getElementById('live-host-icon').src = e.target.result;
+                    document.getElementById('live-host-icon').classList.remove('hidden');
+                    document.getElementById('live-placeholder-icon').classList.add('hidden');
+                    save();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveProfile() {
+            db.me.name = document.getElementById('my-name-input').value;
+            db.me.bio = document.getElementById('my-bio-input').value;
+            save();
+            alert("プロフィールを保存しました。");
+            renderAll();
+        }
+
+        function showUserList(type) {
+            const modal = document.getElementById('user-list-modal');
+            const content = document.getElementById('user-list-content');
+            const title = document.getElementById('user-list-title');
+            
+            title.innerText = type === 'following' ? 'Following' : 'Followers';
+            modal.classList.remove('hidden');
+            
+            const list = type === 'following' ? db.me.following : db.me.followers;
+            content.innerHTML = list.length ? list.map(name => `
+                <div class="glass p-4 rounded-2xl flex justify-between items-center">
+                    <span class="font-black">${name}</span>
+                    <button class="text-[10px] bg-white text-black px-4 py-1 rounded-full font-bold">Profile</button>
+                </div>
+            `).join('') : '<p class="text-center text-gray-600 text-xs">まだ誰もいません</p>';
+        }
+
+        /* --- 🔍 検索 & フィルター --- */
+        function handleSearch() {
+            const query = document.getElementById('global-search').value.toLowerCase();
+            if (!query) return renderAll();
+            
+            const filtered = db.works.filter(w => 
+                w.title.toLowerCase().includes(query) || 
+                w.author.toLowerCase().includes(query) || 
+                w.tags.some(t => t.toLowerCase().includes(query))
+            );
+            
+            // ホームの表示を検索結果に置き換え（簡易的）
+            document.getElementById('home-follow-works').innerHTML = filtered.map(renderSmallCard).join('');
+        }
+
+        /* --- ⚙️ その他 --- */
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        loadProfile();
-        renderHome();
+        // 初期実行
+        (function init() {
+            // 初期フォロワーは0（dbの初期値通り）
+            // 運営はフォロー不可のロジック用
+            window.followUser = (name) => {
+                if (name === "運営") return alert("運営アカウントはフォローできません。");
+                if (db.me.following.includes(name)) return;
+                db.me.following.push(name);
+                save();
+                renderAll();
+            };
+
+            // 通知設定の描画
+            const notifBox = document.getElementById('notif-settings');
+            const labels = { like: 'いいね', comment: 'コメント', bookmark: 'ブックマーク', follow: 'フォロー', sub: '購読' };
+            notifBox.innerHTML = Object.keys(db.me.settings).map(key => `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-400">${labels[key]}通知</span>
+                    <input type="checkbox" ${db.me.settings[key] ? 'checked' : ''} onchange="db.me.settings.${key}=this.checked;save();" class="accent-lime">
+                </div>
+            `).join('');
+
+            renderAll();
+            if (db.me.name) {
+                document.getElementById('my-name-input').value = db.me.name;
+                document.getElementById('my-bio-input').value = db.me.bio;
+            }
+            if (db.me.icon) {
+                document.getElementById('my-icon-preview').src = db.me.icon;
+                document.getElementById('my-icon-preview').classList.remove('hidden');
+                document.getElementById('my-icon-none').classList.add('hidden');
+                document.getElementById('live-host-icon').src = db.me.icon;
+                document.getElementById('live-host-icon').classList.remove('hidden');
+                document.getElementById('live-placeholder-icon').classList.add('hidden');
+            }
+        })();
+
+        // ライブラリタブ
+        let currentLibTab = 'my';
+        function switchLibTab(type) {
+            currentLibTab = type;
+            document.getElementById('lib-tab-my').className = type === 'my' ? 'flex-1 py-4 font-black border-b-2 border-lime text-lime' : 'flex-1 py-4 font-black border-b-2 border-transparent text-gray-500';
+            document.getElementById('lib-tab-bk').className = type === 'bookmark' ? 'flex-1 py-4 font-black border-b-2 border-lime text-lime' : 'flex-1 py-4 font-black border-b-2 border-transparent text-gray-500';
+            renderLibrary();
+        }
+
+        function renderLibrary() {
+            const list = currentLibTab === 'my' ? db.works.filter(w => w.author === db.me.name) : db.works.filter(w => db.me.bookmarks.includes(w.id));
+            document.getElementById('lib-content').innerHTML = list.map(w => `
+                <div class="glass p-4 rounded-2xl flex gap-4 items-center">
+                    <img src="${w.cover}" class="w-12 h-12 rounded-lg object-cover">
+                    <div class="flex-1">
+                        <p class="text-xs font-black">${w.title}</p>
+                        <p class="text-[8px] text-gray-500">${w.privacy === 'private' ? '🔒 非公開' : '🌐 公開'}</p>
+                    </div>
+                    ${currentLibTab === 'my' ? `<button onclick="deleteWork(${w.id})" class="text-red-500 text-xs"><i class="fa fa-trash"></i></button>` : ''}
+                </div>
+            `).join('') || '<p class="text-center text-gray-600 text-[10px] mt-10">作品がありません</p>';
+        }
+
+        function deleteWork(id) {
+            if (!confirm("本当にこの作品を消去しますか？")) return;
+            db.works = db.works.filter(w => w.id !== id);
+            save();
+            renderAll();
+        }
+
+        function bookmarkWork(id) {
+            if (db.me.bookmarks.includes(id)) {
+                db.me.bookmarks = db.me.bookmarks.filter(b => b !== id);
+            } else {
+                db.me.bookmarks.push(id);
+            }
+            save();
+            renderAll();
+        }
     </script>
 </body>
 </html>
