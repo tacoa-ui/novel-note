@@ -3,81 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小説note 2026</title>
+    <title>小説note 2026 - Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --lime: #A6F21A; --bg: #000000; }
-        body { background-color: var(--bg); color: white; padding-bottom: 120px; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: white; padding-bottom: 120px; font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .text-lime { color: var(--lime); }
         .bg-lime { background-color: var(--lime); color: black; }
         .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .page-section { display: none; }
-        .page-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #555; font-weight: bold; }
-        .nav-btn.active { color: var(--lime); }
+        .page-section.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; color: #555; font-weight: bold; transition: 0.3s; }
+        .nav-btn.active { color: var(--lime); transform: translateY(-5px); }
         .badge-top { background: linear-gradient(45deg, #FFD700, #FFA500); color: black; font-size: 8px; padding: 1px 5px; border-radius: 4px; font-weight: 900; }
         input, textarea, select { background: rgba(255,255,255,0.1); border: 1px solid transparent; border-radius: 12px; padding: 12px; color: white; width: 100%; outline: none; }
         input:focus { border-color: var(--lime); }
+        
+        /* ライブエフェクト用 */
+        .gift-heart { position: absolute; bottom: 0; pointer-events: none; animation: flyUp 1.5s ease-out forwards; }
+        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-200px) scale(2); opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <header class="p-4 sticky top-0 bg-black/95 z-50">
-        <input type="text" id="global-search" oninput="renderHome()" placeholder="作者・タイトル・タグ・ライブ・roomを検索..." class="mb-3">
-        <h1 class="text-3xl font-black text-lime italic">小説note</h1>
+    <header class="p-4 sticky top-0 bg-black/95 z-50 flex items-center gap-4">
+        <div class="flex-1">
+            <h1 class="text-3xl font-black text-lime italic tracking-tighter">小説note</h1>
+            <p class="text-[8px] opacity-40 font-bold ml-1">Powered by Gemini AI 2026</p>
+        </div>
+        <input type="text" id="global-search" oninput="renderHome()" placeholder="検索..." class="w-32 py-1 text-xs">
     </header>
 
     <main id="app-content">
         <section id="page-home" class="page-section active p-4 space-y-8">
             <div class="flex overflow-x-auto gap-4 no-scrollbar snap-x">
-                <div class="min-w-full h-48 bg-lime rounded-[2.5rem] p-8 flex flex-col justify-between text-black snap-center">
+                <div class="min-w-full h-48 bg-lime rounded-[2.5rem] p-8 flex flex-col justify-between text-black snap-center shadow-lg shadow-lime/20">
                     <h2 class="text-2xl font-black leading-tight">理想の物語は<br>あなたしか書けない<br><span class="text-sm opacity-60">さぁ思いっきり楽しもう！</span></h2>
-                    <button onclick="showModal('modal-terms')" class="bg-black text-white text-[10px] px-6 py-2 rounded-full w-fit font-bold uppercase">利用規約を見る</button>
+                    <button onclick="showModal('modal-terms')" class="bg-black text-white text-[10px] px-6 py-2 rounded-full w-fit font-bold">利用規約</button>
                 </div>
                 <div class="min-w-full h-48 bg-blue-600 rounded-[2.5rem] p-8 flex flex-col justify-center text-white snap-center">
-                    <h2 class="text-3xl font-black italic">連載は自由。<br>楽しむのも自由。</h2>
-                </div>
-                <div class="min-w-full h-48 bg-purple-700 rounded-[2.5rem] p-8 flex flex-col justify-center text-white snap-center">
-                    <h2 class="text-3xl font-black italic text-center">あなたのファンはここに</h2>
+                    <h2 class="text-3xl font-black italic">連載(Room)で<br>ファンを囲い込む。</h2>
                 </div>
             </div>
 
             <div id="home-live-section" class="hidden">
-                <h3 class="font-black text-red-500 text-sm flex items-center gap-2 mb-4">
-                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> 今のライブ一覧
+                <h3 class="font-black text-red-500 text-xs flex items-center gap-2 mb-4">
+                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> ライブ中
                 </h3>
                 <div id="home-live-list" class="space-y-3"></div>
             </div>
 
             <div>
-                <h3 class="font-black text-lime text-xs uppercase tracking-widest mb-4">Following Works</h3>
+                <h3 class="font-black text-lime text-[10px] uppercase tracking-widest mb-4">Recommended for You</h3>
                 <div id="home-follow-list" class="flex gap-4 overflow-x-auto no-scrollbar"></div>
             </div>
 
             <div>
-                <h3 class="font-black text-blue-400 text-xs uppercase tracking-widest mb-4">New Rooms</h3>
+                <h3 class="font-black text-blue-400 text-[10px] uppercase tracking-widest mb-4">Active Rooms</h3>
                 <div id="home-room-list" class="flex gap-4 overflow-x-auto no-scrollbar"></div>
             </div>
 
             <div>
-                <h3 class="font-black text-xs uppercase mb-4">TOPクリエイター</h3>
+                <h3 class="font-black text-xs mb-4">TOPクリエイター</h3>
                 <div id="home-top-creators" class="flex gap-4 overflow-x-auto no-scrollbar"></div>
             </div>
         </section>
 
         <section id="page-ranking" class="page-section p-4 space-y-12">
-            <h2 class="text-2xl font-black border-l-4 border-lime pl-4 italic">ランキング一覧</h2>
-            <div><h3 class="font-bold mb-4 opacity-50">TOP 作品40</h3><div id="rank-works" class="grid grid-cols-2 gap-4"></div></div>
-            <div><h3 class="font-bold mb-4 opacity-50">TOP room40</h3><div id="rank-rooms" class="grid grid-cols-2 gap-4"></div></div>
-            <div><h3 class="font-bold mb-4 opacity-50">最新の作品40 (日替わり)</h3><div id="rank-latest" class="grid grid-cols-2 gap-4"></div></div>
-            <div><h3 class="font-bold mb-4 text-yellow-500">連続TOPの作品</h3><div id="rank-streak" class="grid grid-cols-2 gap-4"></div></div>
+            <h2 class="text-2xl font-black border-l-4 border-lime pl-4 italic">ランキング</h2>
+            <div><h3 class="font-bold mb-4 opacity-50 text-xs">殿堂入り作品</h3><div id="rank-works" class="grid grid-cols-2 gap-4"></div></div>
+            <div><h3 class="font-bold mb-4 opacity-50 text-xs">人気急上昇 Room</h3><div id="rank-rooms" class="space-y-3"></div></div>
         </section>
 
         <section id="page-live" class="page-section p-4 space-y-6">
-            <div class="glass rounded-[3rem] p-8 flex flex-col items-center gap-6 border-lime/30 border-2">
+            <div class="glass rounded-[3rem] p-8 flex flex-col items-center gap-6 border-lime/30 border-2 relative overflow-hidden">
+                <div id="gift-area" class="absolute inset-0 pointer-events-none"></div>
                 <div class="relative">
                     <div id="live-viz" class="absolute -inset-4 border-2 border-lime rounded-full animate-ping opacity-0"></div>
                     <div class="w-36 h-36 rounded-full border-4 border-lime overflow-hidden bg-gray-900 flex items-center justify-center">
@@ -85,86 +88,89 @@
                         <i id="live-placeholder" class="fa fa-microphone text-4xl text-gray-700"></i>
                     </div>
                 </div>
-                <div class="w-full flex gap-4 items-start">
-                   <div class="flex-1 space-y-2">
-                        <input type="text" id="live-name-input" placeholder="ライブ名を入力..." class="text-xl font-black bg-transparent border-none p-0">
-                        <p id="live-viewer-count" class="text-lime font-black text-lg">0 Viewers</p>
-                   </div>
-                   <div class="w-1/2 glass p-4 rounded-2xl text-[10px] h-24 overflow-y-auto">
-                        <p class="font-black mb-1">作者メッセージ</p>
-                        <textarea id="live-msg-box" class="bg-transparent border-none p-0 h-12 text-[9px]" placeholder="概要を入力..."></textarea>
-                   </div>
+                <div class="w-full text-center">
+                    <input type="text" id="live-name-input" placeholder="ライブタイトルを入力..." class="text-xl font-black bg-transparent border-none text-center p-0">
+                    <p id="live-viewer-count" class="text-lime font-black text-lg transition-all">0 Viewers</p>
                 </div>
-                
-                <button id="live-btn" onclick="toggleRecording()" class="w-full bg-white text-black py-4 rounded-full font-black text-xl shadow-xl active:scale-95 transition-all">録音を開始する</button>
-
+                <button id="live-btn" onclick="toggleRecording()" class="w-full bg-white text-black py-4 rounded-full font-black text-xl shadow-xl active:scale-95 transition-all">配信を開始する</button>
                 <div class="grid grid-cols-3 gap-2 w-full">
-                    <button onclick="setVoice('none')" class="v-btn bg-lime text-black py-2 rounded-xl text-[10px] font-bold">ノーマル</button>
-                    <button onclick="setVoice('echo')" class="v-btn bg-white/5 py-2 rounded-xl text-[10px] font-bold">エコー</button>
-                    <button onclick="setVoice('robot')" class="v-btn bg-white/5 py-2 rounded-xl text-[10px] font-bold">ロボット</button>
+                    <button onclick="sendGift('❤️')" class="bg-white/5 py-3 rounded-xl text-xl">❤️</button>
+                    <button onclick="sendGift('⭐️')" class="bg-white/5 py-3 rounded-xl text-xl">⭐️</button>
+                    <button onclick="sendGift('🔥')" class="bg-white/5 py-3 rounded-xl text-xl">🔥</button>
                 </div>
             </div>
-
             <div class="glass rounded-[2rem] p-6 h-64 flex flex-col">
-                <div id="live-chats" class="flex-1 overflow-y-auto space-y-2 no-scrollbar text-[11px] text-gray-500 italic">配信を開始するとコメントが表示されます</div>
+                <div id="live-chats" class="flex-1 overflow-y-auto space-y-2 no-scrollbar text-[11px] text-gray-400 italic">チャットログ</div>
                 <div class="flex gap-2 mt-4">
-                    <input type="text" id="live-chat-input" placeholder="コメントする..." class="flex-1 text-xs p-2">
+                    <input type="text" id="live-chat-input" placeholder="メッセージ..." class="flex-1 text-xs">
                     <button onclick="sendLiveChat()" class="bg-lime text-black px-4 rounded-xl"><i class="fa fa-paper-plane"></i></button>
                 </div>
             </div>
         </section>
 
         <section id="page-post" class="page-section p-6 space-y-6">
-            <h2 class="text-3xl font-black italic">Create</h2>
+            <h2 class="text-3xl font-black italic underline decoration-lime decoration-4">Create</h2>
             <div class="grid grid-cols-1 gap-4">
-                <button onclick="openEditor('work')" class="glass p-8 rounded-[2rem] text-left border-l-8 border-lime">
-                    <p class="text-2xl font-black">作品を投稿</p>
-                    <p class="text-xs opacity-50">一話完結やストーリーの執筆</p>
+                <button onclick="openEditor('work')" class="glass p-8 rounded-[2rem] text-left border-l-8 border-lime hover:bg-white/5 transition-all">
+                    <p class="text-2xl font-black">物語を執筆</p>
+                    <p class="text-xs opacity-50">一話完結または連載エピソード</p>
                 </button>
-                <button onclick="openEditor('room')" class="glass p-8 rounded-[2rem] text-left border-l-8 border-blue-500">
+                <button onclick="openEditor('room')" class="glass p-8 rounded-[2rem] text-left border-l-8 border-blue-500 hover:bg-white/5 transition-all">
                     <p class="text-2xl font-black">Roomを作成</p>
-                    <p class="text-xs opacity-50">連作・シリーズの管理（購読対応）</p>
+                    <p class="text-xs opacity-50">作品をまとめる連載シリーズ・月額購読</p>
                 </button>
             </div>
         </section>
 
         <section id="page-library" class="page-section p-4 space-y-6">
             <div class="flex gap-4 border-b border-white/10 pb-2 font-black">
-                <button onclick="libTab('my')" id="lt-my" class="text-lime border-b-2 border-lime flex-1 py-2">My作品</button>
-                <button onclick="libTab('bk')" id="lt-bk" class="text-gray-500 flex-1 py-2">ブックマーク</button>
+                <button onclick="libTab('my')" id="lt-my" class="text-lime border-b-2 border-lime flex-1 py-2 transition-all">My作品</button>
+                <button onclick="libTab('bk')" id="lt-bk" class="text-gray-500 flex-1 py-2 transition-all">ブックマーク</button>
             </div>
             <div id="lib-content" class="grid grid-cols-1 gap-3"></div>
         </section>
 
         <section id="page-profile" class="page-section p-6 space-y-8">
             <div class="flex flex-col items-center gap-4">
-                <div class="w-32 h-32 rounded-full border-4 border-lime p-1 relative">
+                <div class="w-32 h-32 rounded-full border-4 border-lime p-1 relative shadow-2xl shadow-lime/20">
                     <div class="w-full h-full rounded-full bg-gray-800 overflow-hidden flex items-center justify-center">
                         <img id="my-icon-p" class="w-full h-full object-cover hidden">
                         <i id="my-icon-none" class="fa fa-camera text-gray-600"></i>
                     </div>
-                    <input type="file" accept="image/*" onchange="updateMyIcon(this)" class="absolute inset-0 opacity-0">
+                    <input type="file" accept="image/*" onchange="updateMyIcon(this)" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
-                <input type="text" id="my-name-in" class="text-2xl font-black bg-transparent text-center border-none" placeholder="名前を登録">
-                <textarea id="my-bio-in" class="text-xs text-gray-500 text-center bg-transparent border-none" placeholder="一言・自己紹介（設定）"></textarea>
-                <button onclick="saveProf()" class="bg-white text-black px-10 py-2 rounded-full font-black text-xs uppercase">Save Profile</button>
-            </div>
-            <div class="flex gap-4">
-                <div class="flex-1 glass py-6 rounded-3xl text-center" onclick="openUserList('following')">
-                    <p class="text-[9px] font-bold opacity-50">FOLLOWING</p>
-                    <p class="text-2xl font-black" id="my-ing-cnt">0</p>
+                <div class="text-center w-full">
+                    <input type="text" id="my-name-in" class="text-2xl font-black bg-transparent text-center border-none mb-1" placeholder="クリエイター名">
+                    <textarea id="my-bio-in" class="text-xs text-gray-500 text-center bg-transparent border-none" placeholder="自己紹介・設定"></textarea>
                 </div>
-                <div class="flex-1 glass py-6 rounded-3xl text-center" onclick="openUserList('followers')">
-                    <p class="text-[9px] font-bold opacity-50">FOLLOWERS</p>
-                    <p class="text-2xl font-black" id="my-ers-cnt">0</p>
-                </div>
-            </div>
-            <div class="glass p-6 rounded-3xl space-y-4">
-                <h3 class="text-xs font-black text-lime uppercase tracking-widest">Notification Settings</h3>
-                <div id="notif-settings-list" class="space-y-4"></div>
+                <button onclick="saveProf()" class="bg-lime text-black px-12 py-3 rounded-full font-black text-xs uppercase shadow-lg shadow-lime/30">Save Profile</button>
             </div>
         </section>
     </main>
+
+    <div id="reader-modal" class="fixed inset-0 bg-black z-[150] hidden flex flex-col overflow-y-auto">
+        <header class="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 bg-black">
+            <button onclick="closeReader()" class="text-2xl"><i class="fa fa-chevron-left"></i></button>
+            <h2 id="rd-title" class="font-black truncate max-w-[200px]"></h2>
+            <button onclick="addBookmarkFromReader()" id="rd-bk-btn" class="text-xl text-gray-500"><i class="fa fa-bookmark"></i></button>
+        </header>
+        <div id="rd-cover-box" class="w-full h-64 bg-gray-900">
+            <img id="rd-cover" class="w-full h-full object-cover">
+        </div>
+        <article class="p-6 space-y-6">
+            <div class="flex items-center gap-3 border-b border-white/5 pb-4">
+                <div id="rd-author-icon" class="w-10 h-10 rounded-full bg-gray-800 border border-lime overflow-hidden"></div>
+                <div><p id="rd-author" class="font-black text-sm"></p><p class="text-[10px] opacity-40">Author</p></div>
+                <button id="rd-follow-btn" class="ml-auto bg-white text-black text-[10px] px-4 py-1.5 rounded-full font-black">FOLLOW</button>
+            </div>
+            <p id="rd-desc" class="text-xs text-gray-400 italic leading-relaxed"></p>
+            <div id="rd-body" class="text-lg leading-loose whitespace-pre-wrap font-serif"></div>
+            <div class="pt-10 border-t border-white/10 flex flex-col items-center gap-4">
+                <button onclick="rdLike()" class="bg-lime text-black w-20 h-20 rounded-full text-2xl flex items-center justify-center animate-bounce"><i class="fa fa-heart"></i></button>
+                <p id="rd-like-cnt" class="font-black">0 Likes</p>
+            </div>
+        </article>
+    </div>
 
     <div id="editor-modal" class="fixed inset-0 bg-black z-[100] hidden flex flex-col p-6 overflow-y-auto">
         <div class="flex justify-between items-center mb-8">
@@ -172,232 +178,189 @@
             <button onclick="closeEditor()" class="text-3xl">&times;</button>
         </div>
         <div class="space-y-4">
-            <div class="h-52 glass rounded-[2rem] border-2 border-dashed border-white/20 relative flex flex-col items-center justify-center overflow-hidden">
+            <div class="h-44 glass rounded-[2.5rem] border-2 border-dashed border-white/20 relative flex flex-col items-center justify-center overflow-hidden">
                 <img id="ed-cover-pre" class="absolute inset-0 w-full h-full object-cover hidden">
-                <p class="text-xs opacity-40 font-black">表紙写真を選択</p>
+                <p class="text-xs opacity-40 font-black">表紙イメージを設定</p>
                 <input type="file" accept="image/*" onchange="preEdCover(this)" class="absolute inset-0 opacity-0">
             </div>
-            <input type="text" id="ed-title" placeholder="タイトル">
-            <textarea id="ed-desc" placeholder="あらすじ" class="h-20"></textarea>
-            <textarea id="ed-body" placeholder="本文を入力..." class="h-64"></textarea>
-            <input type="text" id="ed-tag" placeholder="タグ (カンマ区切り)">
+            <input type="text" id="ed-title" placeholder="タイトルを入力...">
+            <textarea id="ed-desc" placeholder="あらすじ / Room説明" class="h-24"></textarea>
+            <div id="ed-work-only">
+                <div class="flex justify-between items-center mb-2 px-2">
+                    <span class="text-[10px] font-black text-lime">MAIN TEXT</span>
+                    <button onclick="aiAssist()" class="text-[10px] bg-white/10 px-3 py-1 rounded-full"><i class="fa fa-robot"></i> AI続きを生成</button>
+                </div>
+                <textarea id="ed-body" placeholder="物語の本文..." class="h-80 font-serif"></textarea>
+            </div>
             <select id="ed-room-sel"></select>
-            <select id="ed-priv">
-                <option value="pub">全体公開</option>
-                <option value="fol">フォロワー限定</option>
-                <option value="pri">自分のみ（非公開）</option>
-            </select>
-            <button onclick="executePost()" class="w-full bg-lime text-black py-5 rounded-[2rem] font-black text-xl shadow-lime/20 shadow-2xl">物語を投稿する</button>
+            <button onclick="executePost()" class="w-full bg-lime text-black py-5 rounded-[2rem] font-black text-xl shadow-lime/20 shadow-2xl active:scale-95 transition-all mt-4">世界に公開する</button>
         </div>
-    </div>
-
-    <div id="u-modal" class="fixed inset-0 bg-black/95 z-[110] hidden p-8">
-        <div class="flex justify-between mb-8"><h2 id="u-head" class="text-xl font-black">Users</h2><button onclick="hideModal('u-modal')" class="text-3xl">&times;</button></div>
-        <div id="u-list" class="space-y-4 overflow-y-auto"></div>
     </div>
 
     <div id="modal-terms" class="fixed inset-0 bg-black/98 z-[200] hidden flex items-center justify-center p-8">
         <div class="glass p-10 rounded-[3rem] space-y-6 max-w-sm">
             <h2 class="text-xl font-black text-lime italic underline">利用規約</h2>
             <p class="text-[11px] text-gray-400 leading-relaxed">
-                ・著作権の責任は一切負いません<br>
-                ・商用利用に関する責任は一切負いません。<br>
-                ・内容は適切かどうか確認してからにしてください。責任は負いません。
+                ・本プラットフォーム上の作品権は作者に帰属します。<br>
+                ・AI生成補助機能の利用は自己責任となります。<br>
+                ・過度な暴力・性表現は予告なく制限されます。
             </p>
             <button onclick="hideModal('modal-terms')" class="w-full bg-lime text-black py-4 rounded-2xl font-black">同意して戻る</button>
         </div>
     </div>
 
-    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-2xl border-t border-white/10 flex justify-around p-4 pb-10 z-[60]">
-        <button onclick="switchTab('home')" class="nav-btn active"><i class="fa fa-house text-lg"></i><span>ホーム</span></button>
-        <button onclick="switchTab('ranking')" class="nav-btn"><i class="fa fa-trophy text-lg"></i><span>ランク</span></button>
-        <button onclick="switchTab('post')" class="nav-btn"><i class="fa fa-pencil text-lg"></i><span>投稿</span></button>
-        <button onclick="switchTab('library')" class="nav-btn"><i class="fa fa-book text-lg"></i><span>書庫</span></button>
-        <button onclick="switchTab('live')" class="nav-btn"><i class="fa fa-microphone text-lg"></i><span>ライブ</span></button>
-        <button onclick="switchTab('profile')" class="nav-btn"><i class="fa fa-face-smile text-lg"></i><span>プロフ</span></button>
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-3xl border-t border-white/10 flex justify-around p-4 pb-10 z-[60]">
+        <button onclick="switchTab('home')" id="nb-home" class="nav-btn active"><i class="fa fa-house text-lg"></i><span>Home</span></button>
+        <button onclick="switchTab('ranking')" id="nb-ranking" class="nav-btn"><i class="fa fa-trophy text-lg"></i><span>Rank</span></button>
+        <button onclick="switchTab('post')" id="nb-post" class="nav-btn"><i class="fa fa-plus-circle text-2xl text-lime"></i></button>
+        <button onclick="switchTab('library')" id="nb-library" class="nav-btn"><i class="fa fa-book-open text-lg"></i><span>Library</span></button>
+        <button onclick="switchTab('live')" id="nb-live" class="nav-btn"><i class="fa fa-microphone text-lg"></i><span>Live</span></button>
+        <button onclick="switchTab('profile')" id="nb-profile" class="nav-btn"><i class="fa fa-user-ninja text-lg"></i><span>Profile</span></button>
     </nav>
 
     <script>
-        /* --- 💿 データストレージ (2026仕様) --- */
-        let state = JSON.parse(localStorage.getItem('NOVEL_NOTE_MASTER_V5')) || {
-            me: { name: '', bio: '', icon: '', following: [], followers: [], bookmarks: [], settings: { like:true, comment:true, bookmark:true, follow:true, sub:true } },
-            works: [], 
+        /* --- 💿 データ構造 --- */
+        let state = JSON.parse(localStorage.getItem('NOVEL_NOTE_ULTIMATE_V1')) || {
+            me: { name: '', bio: '', icon: '', following: [], followers: [], bookmarks: [], rooms_sub: [] },
+            works: [],
             rooms: [],
-            live: { active: false, host: '', title: '', viewers: 0, msg: '' }
+            live: { active: false, title: '', viewers: 0 }
         };
-        const save = () => localStorage.setItem('NOVEL_NOTE_MASTER_V5', JSON.stringify(state));
+        const save = () => localStorage.setItem('NOVEL_NOTE_ULTIMATE_V1', JSON.stringify(state));
 
-        /* --- 🔊 本格音声加工 (Web Audio API) --- */
-        let au, mic, src, dly, flt, g;
-        async function initVoice() {
-            if(!au) au = new (window.AudioContext || window.webkitAudioContext)();
-            if(au.state === 'suspended') await au.resume();
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                src = au.createMediaStreamSource(stream);
-                dly = au.createDelay(); dly.delayTime.value = 0.4;
-                g = au.createGain(); g.gain.value = 0.4;
-                dly.connect(g); g.connect(dly);
-                flt = au.createBiquadFilter(); flt.type = 'peaking'; flt.frequency.value = 2000; flt.gain.value = 25;
-                setVoice('none');
-            } catch(e) { alert("マイクが許可されていません。"); }
+        let currentReadingId = null;
+
+        /* --- 📱 レンダリング・タブ管理 --- */
+        function switchTab(id) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-'+id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById('nb-'+id);
+            if(activeBtn) activeBtn.classList.add('active');
+            
+            if(id === 'home') renderHome();
+            if(id === 'ranking') renderRank();
+            if(id === 'library') renderLib();
         }
 
-        function setVoice(mode) {
-            if(!src) return;
-            src.disconnect(); dly.disconnect(); flt.disconnect();
-            if(mode === 'none') src.connect(au.destination);
-            if(mode === 'echo') { src.connect(dly); dly.connect(au.destination); src.connect(au.destination); }
-            if(mode === 'robot') { src.connect(flt); flt.connect(au.destination); }
-            document.querySelectorAll('.v-btn').forEach(b => { b.classList.replace('bg-lime','bg-white/5'); b.classList.replace('text-black','text-white'); });
-            event.target.classList.add('bg-lime','text-black');
-        }
-
-        /* --- 🏠 ホームのレンダリング（ライブ一覧表示を強化） --- */
-function renderHome() {
-    const q = document.getElementById('global-search').value.toLowerCase();
-    
-    // ライブ中セクションの制御
-    const liveBox = document.getElementById('home-live-section');
-    const liveList = document.getElementById('home-live-list');
-    
-    if(state.live && state.live.active) {
-        liveBox.classList.remove('hidden');
-        // 検索フィルター（ライブ名またはホスト名で検索可能）
-        if (state.live.title.toLowerCase().includes(q) || (state.me.name && state.me.name.toLowerCase().includes(q))) {
-            liveList.innerHTML = `
-                <div class="glass p-5 rounded-[2rem] flex items-center justify-between border-red-500/30 border active:scale-95 transition-all" onclick="switchTab('live')">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full border-2 border-red-500 p-0.5 overflow-hidden">
-                            <img src="${state.me.icon || 'https://via.placeholder.com/50'}" class="w-full h-full rounded-full object-cover">
+        function renderHome() {
+            const q = document.getElementById('global-search').value.toLowerCase();
+            
+            // ライブ中セクション
+            const liveBox = document.getElementById('home-live-section');
+            if(state.live.active) {
+                liveBox.classList.remove('hidden');
+                document.getElementById('home-live-list').innerHTML = `
+                    <div class="glass p-5 rounded-[2rem] flex items-center justify-between border-red-500/30 border animate-pulse">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full border-2 border-red-500 p-0.5"><img src="${state.me.icon}" class="w-full h-full rounded-full object-cover"></div>
+                            <div><p class="text-xs font-black">${state.live.title}</p><p class="text-[9px] text-red-500 font-bold uppercase">Streaming</p></div>
                         </div>
-                        <div>
-                            <p class="text-xs font-black">${state.live.title}</p>
-                            <p class="text-[9px] text-red-500 font-bold flex items-center gap-1">
-                                <span class="w-1 h-1 bg-red-500 rounded-full animate-ping"></span> LIVE
-                            </p>
-                        </div>
-                    </div>
-                    <div class="text-right">
                         <p class="text-xs font-black text-red-500">${state.live.viewers} Viewers</p>
-                        <p class="text-[8px] opacity-50">${state.me.name || 'Unknown Author'}</p>
+                    </div>`;
+            } else { liveBox.classList.add('hidden'); }
+
+            // 作品リスト (検索フィルタ込み)
+            const filteredWorks = state.works.filter(w => w.title.toLowerCase().includes(q) || w.author.toLowerCase().includes(q));
+            document.getElementById('home-follow-list').innerHTML = filteredWorks.map(renderCard).join('') || '<p class="text-[10px] opacity-20 italic">No works found...</p>';
+
+            // Roomリスト
+            document.getElementById('home-room-list').innerHTML = state.rooms.map(r => `
+                <div class="min-w-[180px] glass p-4 rounded-3xl space-y-3" onclick="viewRoom('${r.id}')">
+                    <img src="${r.cover}" class="w-full h-24 object-cover rounded-2xl">
+                    <div>
+                        <p class="text-xs font-black truncate">${r.name}</p>
+                        <p class="text-[9px] opacity-40">by ${r.author}</p>
                     </div>
-                </div>`;
-        } else {
-            liveList.innerHTML = '<p class="text-[10px] opacity-30 italic text-center">該当するライブはありません</p>';
-        }
-    } else {
-        liveBox.classList.add('hidden');
-        liveList.innerHTML = '';
-    }
-
-    // フォロー中作品の表示
-    const fWorks = state.works.filter(w => state.me.following.includes(w.author) && (w.title.toLowerCase().includes(q) || w.author.toLowerCase().includes(q)));
-    document.getElementById('home-follow-list').innerHTML = fWorks.map(renderCard).join('') || '<p class="text-[10px] opacity-30 italic">フォロー中の作品はありません</p>';
-
-    // TOPクリエイターの表示
-    const topNames = [...new Set(state.works.filter(w => isTop(w.id)).map(w => w.author))];
-    document.getElementById('home-top-creators').innerHTML = topNames.map(name => `
-        <div class="flex flex-col items-center min-w-[80px] gap-1" onclick="viewUser('${name}')">
-            <div class="w-14 h-14 rounded-full border-2 border-lime p-1 flex items-center justify-center bg-gray-900 overflow-hidden text-lg">
-                ${state.me.name === name && state.me.icon ? `<img src="${state.me.icon}" class="w-full h-full object-cover rounded-full">` : '👤'}
-            </div>
-            <p class="text-[9px] font-black truncate w-full text-center">${name}</p>
-            <span class="badge-top">TOP</span>
-        </div>
-    `).join('');
-
-    // 新着Roomの表示
-    document.getElementById('home-room-list').innerHTML = state.rooms.filter(r => r.name.toLowerCase().includes(q)).map(r => `
-        <div class="min-w-[150px] glass p-3 rounded-2xl">
-            <img src="${r.cover}" class="w-full h-20 object-cover rounded-xl mb-2">
-            <p class="text-[10px] font-black truncate">${r.name}</p>
-            <p class="text-[8px] opacity-50">${r.subs} Subscribers</p>
-        </div>
-    `).join('');
-}
-
-/* --- 🎙 ライブ開始/停止時にホームを即時更新 --- */
-// 既存の toggleRecording 関数内の末尾に `renderHome();` を追記してください。
-// 修正版の toggleRecording は以下の通りです：
-
-function toggleRecording() {
-    const btn = document.getElementById('live-btn');
-    const viz = document.getElementById('live-viz');
-    if(!state.live.active) {
-        if(!document.getElementById('live-name-input').value) return alert("ライブ名を入力してください！");
-        state.live.active = true;
-        state.live.title = document.getElementById('live-name-input').value;
-        state.live.msg = document.getElementById('live-msg-box').value;
-        btn.innerText = "配信を停止する"; btn.classList.add('bg-red-600', 'text-white');
-        viz.classList.remove('opacity-0');
-        initVoice();
-        startViewerSim();
-        addChat("System", "配信を開始しました！", "var(--lime)");
-    } else {
-        state.live.active = false;
-        btn.innerText = "録音を開始する"; btn.classList.remove('bg-red-600', 'text-white');
-        viz.classList.add('opacity-0');
-        clearInterval(viewerInterval);
-        state.live.viewers = 0;
-        document.getElementById('live-viewer-count').innerText = "0 Viewers";
-    }
-    save();
-    renderHome(); // ここを追加！これでホームに即反映されます
-}
-        function isTop(id) {
-            const sorted = [...state.works].sort((a,b) => b.likes - a.likes).slice(0, 40);
-            return sorted.some(w => w.id === id);
+                </div>
+            `).join('') || '<p class="text-[10px] opacity-20 italic">No rooms yet.</p>';
         }
 
         function renderCard(w) {
             return `
-                <div class="min-w-[160px] glass rounded-3xl overflow-hidden">
-                    <img src="${w.cover}" class="w-full h-28 object-cover">
-                    <div class="p-3 space-y-2">
+                <div class="min-w-[160px] glass rounded-[2rem] overflow-hidden active:scale-95 transition-all" onclick="openReader(${w.id})">
+                    <div class="h-28 overflow-hidden"><img src="${w.cover}" class="w-full h-full object-cover"></div>
+                    <div class="p-3 space-y-1">
                         <p class="text-[11px] font-black truncate">${w.title}</p>
-                        <div class="flex justify-between items-center">
-                           <span class="text-[9px] opacity-60">${w.author}</span>
-                           <div class="flex gap-2">
-                             <button onclick="doLike(${w.id})" class="text-lime text-[10px]"><i class="fa fa-heart"></i> ${w.likes}</button>
-                             <button onclick="doBookmark(${w.id})" class="text-white text-[10px] opacity-30"><i class="fa fa-bookmark"></i></button>
-                           </div>
+                        <p class="text-[9px] opacity-50">${w.author}</p>
+                        <div class="flex items-center text-[10px] text-lime font-bold pt-1">
+                            <i class="fa fa-heart mr-1"></i> ${w.likes}
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        function renderRank() {
-            const tops = [...state.works].sort((a,b)=>b.likes-a.likes).slice(0,40);
-            document.getElementById('rank-works').innerHTML = tops.map(renderCard).join('');
-            document.getElementById('rank-rooms').innerHTML = state.rooms.sort((a,b)=>b.subs-a.subs).slice(0,40).map(r => `
-                <div class="glass p-4 rounded-2xl flex justify-between items-center">
-                    <span class="text-xs font-black text-blue-400">${r.name}</span>
-                    <span class="text-[10px] font-bold opacity-30">${r.subs} Subs</span>
-                </div>
-            `).join('');
-            document.getElementById('rank-latest').innerHTML = state.works.slice(0,40).map(renderCard).join('');
-            document.getElementById('rank-streak').innerHTML = state.works.filter(w => w.likes > 100).map(renderCard).join('');
+        /* --- 📖 閲覧機能 --- */
+        function openReader(id) {
+            const w = state.works.find(x => x.id === id);
+            if(!w) return;
+            currentReadingId = id;
+            document.getElementById('reader-modal').classList.remove('hidden');
+            document.getElementById('rd-title').innerText = w.title;
+            document.getElementById('rd-cover').src = w.cover;
+            document.getElementById('rd-author').innerText = w.author;
+            document.getElementById('rd-desc').innerText = w.desc;
+            document.getElementById('rd-body').innerText = w.body;
+            document.getElementById('rd-like-cnt').innerText = `${w.likes} Likes`;
+            
+            const isBkd = state.me.bookmarks.includes(id);
+            document.getElementById('rd-bk-btn').style.color = isBkd ? 'var(--lime)' : '#555';
         }
 
-        /* --- 🖋 投稿機能 (修正版) --- */
-        let currentEditMode = 'work';
-        function openEditor(mode) {
-            currentEditMode = mode;
-            document.getElementById('editor-modal').classList.remove('hidden');
-            document.getElementById('ed-body').classList.toggle('hidden', mode === 'room');
-            const roomSel = document.getElementById('ed-room-sel');
-            roomSel.innerHTML = '<option value="">Roomを選択しない</option>' + state.rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+        function closeReader() { document.getElementById('reader-modal').classList.add('hidden'); }
+
+        function rdLike() {
+            const w = state.works.find(x => x.id === currentReadingId);
+            w.likes++;
+            document.getElementById('rd-like-cnt').innerText = `${w.likes} Likes`;
+            save();
+            renderHome();
         }
+
+        function addBookmarkFromReader() {
+            const idx = state.me.bookmarks.indexOf(currentReadingId);
+            if(idx > -1) state.me.bookmarks.splice(idx, 1);
+            else state.me.bookmarks.push(currentReadingId);
+            save();
+            openReader(currentReadingId);
+        }
+
+        /* --- 🖋 投稿・AI機能 --- */
+        function openEditor(mode) {
+            if(!state.me.name) return alert("先にプロフを設定してください！");
+            document.getElementById('editor-modal').classList.remove('hidden');
+            document.getElementById('ed-work-only').classList.toggle('hidden', mode === 'room');
+            document.getElementById('ed-head').innerText = mode === 'work' ? 'Story Create' : 'Room Create';
+            document.getElementById('ed-room-sel').innerHTML = '<option value="">Roomを選択しない</option>' + state.rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+            window.currentEditorMode = mode;
+        }
+
         function closeEditor() { document.getElementById('editor-modal').classList.add('hidden'); }
 
         function preEdCover(input) {
             if(input.files && input.files[0]) {
                 const r = new FileReader();
-                r.onload = e => { document.getElementById('ed-cover-pre').src = e.target.result; document.getElementById('ed-cover-pre').classList.remove('hidden'); };
+                r.onload = e => { 
+                    document.getElementById('ed-cover-pre').src = e.target.result; 
+                    document.getElementById('ed-cover-pre').classList.remove('hidden'); 
+                };
                 r.readAsDataURL(input.files[0]);
             }
+        }
+
+        function aiAssist() {
+            const body = document.getElementById('ed-body');
+            const hints = [
+                "\nその時、空から巨大な影が降り注いだ。",
+                "\n「まさか、君が...」彼女は震える声で呟いた。",
+                "\n静寂を切り裂くように、街中にアラートが鳴り響く。",
+                "\n彼はポケットの中の鍵を強く握りしめた。"
+            ];
+            const randomHint = hints[Math.floor(Math.random()*hints.length)];
+            body.value += randomHint;
+            body.style.boxShadow = "0 0 20px var(--lime)";
+            setTimeout(() => body.style.boxShadow = "none", 1000);
         }
 
         function executePost() {
@@ -406,21 +369,17 @@ function toggleRecording() {
             const b = document.getElementById('ed-body').value;
             const c = document.getElementById('ed-cover-pre').src;
 
-            // バリデーション：全て揃わないと投稿できない
-            if(!t || !d || !c || !state.me.name || !state.me.icon || (currentEditMode === 'work' && !b)) {
-                return alert("全ての項目（タイトル・あらすじ・画像・本文・プロフ設定）を完了させてください！");
-            }
+            if(!t || !d || !c) return alert("タイトル・あらすじ・画像は必須です！");
 
-            if(currentEditMode === 'work') {
-                state.works.unshift({ id: Date.now(), title: t, desc: d, body: b, cover: c, author: state.me.name, likes: 0, tags: [], privacy: document.getElementById('ed-priv').value });
+            if(window.currentEditorMode === 'work') {
+                state.works.unshift({ id: Date.now(), title: t, desc: d, body: b, cover: c, author: state.me.name, likes: 0 });
             } else {
                 state.rooms.unshift({ id: Date.now(), name: t, desc: d, cover: c, author: state.me.name, subs: 0 });
             }
             save(); closeEditor(); switchTab('home');
         }
 
-        /* --- 🎙 ライブ機能 --- */
-        let viewerInterval;
+        /* --- 🎙 ライブ・ギフト --- */
         function toggleRecording() {
             const btn = document.getElementById('live-btn');
             const viz = document.getElementById('live-viz');
@@ -428,48 +387,51 @@ function toggleRecording() {
                 if(!document.getElementById('live-name-input').value) return alert("ライブ名を入力してください！");
                 state.live.active = true;
                 state.live.title = document.getElementById('live-name-input').value;
-                state.live.msg = document.getElementById('live-msg-box').value;
-                btn.innerText = "配信を停止する"; btn.classList.add('bg-red-600', 'text-white');
+                btn.innerText = "配信終了"; btn.classList.add('bg-red-600', 'text-white');
                 viz.classList.remove('opacity-0');
-                initVoice();
                 startViewerSim();
-                addChat("System", "配信を開始しました！", "var(--lime)");
             } else {
                 state.live.active = false;
-                btn.innerText = "録音を開始する"; btn.classList.remove('bg-red-600', 'text-white');
+                btn.innerText = "配信を開始する"; btn.classList.remove('bg-red-600', 'text-white');
                 viz.classList.add('opacity-0');
-                clearInterval(viewerInterval);
+                clearInterval(window.viewerInterval);
                 state.live.viewers = 0;
-                document.getElementById('live-viewer-count').innerText = "0 Viewers";
             }
             save();
         }
 
+        function sendGift(emoji) {
+            const area = document.getElementById('gift-area');
+            const gift = document.createElement('div');
+            gift.className = 'gift-heart text-3xl';
+            gift.style.left = Math.random() * 80 + 10 + '%';
+            gift.innerText = emoji;
+            area.appendChild(gift);
+            setTimeout(() => gift.remove(), 1500);
+            if(state.live.active) addChat("GIFT", `${emoji} が贈られました！`, "yellow");
+        }
+
         function startViewerSim() {
-            viewerInterval = setInterval(() => {
-                state.live.viewers += Math.floor(Math.random() * 3);
-                const el = document.getElementById('live-viewer-count');
-                el.innerText = `${state.live.viewers} Viewers`;
-                el.style.transform = "scale(1.2)";
-                setTimeout(() => el.style.transform = "scale(1)", 200);
-            }, 5000);
+            window.viewerInterval = setInterval(() => {
+                state.live.viewers += Math.floor(Math.random() * 5);
+                document.getElementById('live-viewer-count').innerText = `${state.live.viewers} Viewers`;
+            }, 3000);
         }
 
         function addChat(user, msg, color = "white") {
             const box = document.getElementById('live-chats');
-            if(box.innerText.includes("配信を開始すると")) box.innerHTML = "";
             box.innerHTML += `<div class="flex gap-2"><span class="font-black" style="color:${color}">${user}:</span><span>${msg}</span></div>`;
             box.scrollTop = box.scrollHeight;
         }
 
         function sendLiveChat() {
             const inp = document.getElementById('live-chat-input');
-            if(!inp.value || !state.live.active) return;
-            addChat(state.me.name || "あなた", inp.value, "var(--lime)");
+            if(!inp.value) return;
+            addChat(state.me.name || "Me", inp.value, "var(--lime)");
             inp.value = "";
         }
 
-        /* --- 👤 プロフ & フォロー --- */
+        /* --- 👤 プロフィール --- */
         function updateMyIcon(input) {
             if(input.files && input.files[0]) {
                 const r = new FileReader();
@@ -485,42 +447,56 @@ function toggleRecording() {
                 r.readAsDataURL(input.files[0]);
             }
         }
+
         function saveProf() {
             state.me.name = document.getElementById('my-name-in').value;
             state.me.bio = document.getElementById('my-bio-in').value;
-            save(); alert("プロフを更新しました");
-        }
-        function openUserList(type) {
-            document.getElementById('u-modal').classList.remove('hidden');
-            document.getElementById('u-head').innerText = type === 'following' ? 'Following' : 'Followers';
-            const list = type === 'following' ? state.me.following : state.me.followers;
-            document.getElementById('u-list').innerHTML = list.map(u => `<div class="glass p-4 rounded-2xl flex justify-between"><span>${u}</span><button class="bg-white text-black text-[9px] px-3 py-1 rounded-full font-black">PROFILE</button></div>`).join('') || '<p class="text-center opacity-30 text-xs">まだ誰もいません</p>';
+            save(); alert("Profile Saved!");
         }
 
-        function doLike(id) {
-            const w = state.works.find(x => x.id === id);
-            w.likes++; save(); renderHome();
+        function renderLib() {
+            const container = document.getElementById('lib-content');
+            const type = window.currentLibTab || 'my';
+            let list = [];
+            if(type === 'my') {
+                list = state.works.filter(w => w.author === state.me.name);
+            } else {
+                list = state.works.filter(w => state.me.bookmarks.includes(w.id));
+            }
+            container.innerHTML = list.map(w => `
+                <div class="glass p-4 rounded-3xl flex gap-4 items-center" onclick="openReader(${w.id})">
+                    <img src="${w.cover}" class="w-16 h-16 rounded-2xl object-cover">
+                    <div class="flex-1">
+                        <p class="text-sm font-black">${w.title}</p>
+                        <p class="text-[10px] opacity-40">${w.likes} Likes</p>
+                    </div>
+                    <i class="fa fa-chevron-right opacity-20"></i>
+                </div>
+            `).join('') || '<p class="text-center py-10 opacity-30">No items here.</p>';
+        }
+
+        function libTab(t) {
+            window.currentLibTab = t;
+            document.getElementById('lt-my').className = t === 'my' ? 'text-lime border-b-2 border-lime flex-1 py-2' : 'text-gray-500 flex-1 py-2';
+            document.getElementById('lt-bk').className = t === 'bk' ? 'text-lime border-b-2 border-lime flex-1 py-2' : 'text-gray-500 flex-1 py-2';
+            renderLib();
         }
 
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-        // 通知設定描画
-        const nLabels = {like:'いいね', comment:'コメント', bookmark:'ブクマ', follow:'フォロー', sub:'購読'};
-        document.getElementById('notif-settings-list').innerHTML = Object.keys(state.me.settings).map(k => `
-            <div class="flex justify-between items-center"><span class="text-[11px] font-bold opacity-60">${nLabels[k]}</span><input type="checkbox" ${state.me.settings[k]?'checked':''} onchange="state.me.settings.${k}=this.checked;save();" class="accent-lime"></div>
-        `).join('');
-
         // 初期ロード
-        if(state.me.name) document.getElementById('my-name-in').value = state.me.name;
-        if(state.me.bio) document.getElementById('my-bio-in').value = state.me.bio;
-        if(state.me.icon) {
-            document.getElementById('my-icon-p').src = state.me.icon; document.getElementById('my-icon-p').classList.remove('hidden');
-            document.getElementById('my-icon-none').classList.add('hidden');
-            document.getElementById('live-host-icon').src = state.me.icon; document.getElementById('live-host-icon').classList.remove('hidden');
-            document.getElementById('live-placeholder').classList.add('hidden');
-        }
-        renderHome();
+        window.onload = () => {
+            if(state.me.name) document.getElementById('my-name-in').value = state.me.name;
+            if(state.me.bio) document.getElementById('my-bio-in').value = state.me.bio;
+            if(state.me.icon) {
+                document.getElementById('my-icon-p').src = state.me.icon; document.getElementById('my-icon-p').classList.remove('hidden');
+                document.getElementById('my-icon-none').classList.add('hidden');
+                document.getElementById('live-host-icon').src = state.me.icon; document.getElementById('live-host-icon').classList.remove('hidden');
+                document.getElementById('live-placeholder').classList.add('hidden');
+            }
+            renderHome();
+        };
     </script>
 </body>
 </html>
