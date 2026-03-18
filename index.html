@@ -15,9 +15,8 @@
         .ad-card { min-width: 85vw; height: 160px; scroll-snap-align: center; }
         .live-badge { background: #ff0000; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        /* タブの切り替えアニメーション */
-        .tab-section { display: none; animation: fadeIn 0.2s ease-out; }
-        .tab-section.active { display: block; }
+        /* アニメーション用 */
+        .fade-in { animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -33,7 +32,7 @@
 
     <main id="app-content">
 
-        <section id="tab-home" class="tab-section active p-4 space-y-8">
+        <section id="tab-home" class="tab-section block fade-in p-4 space-y-8">
             <div class="flex overflow-x-auto gap-4 no-scrollbar snap-x">
                 <div class="ad-card bg-gradient-to-br from-lime-400 to-green-600 rounded-3xl p-6 flex flex-col justify-center text-black">
                     <h2 class="text-xl font-black leading-tight">理想の物語は<br>あなたしか書けない</h2>
@@ -55,7 +54,7 @@
                     <div id="home-follows" class="flex gap-4 overflow-x-auto no-scrollbar"><p class="text-gray-600 text-xs italic">フォローしている作品はありません</p></div></div>
                 <div><h3 class="font-bold mb-3 text-lime">新着の購読中のroom</h3>
                     <div id="home-rooms" class="flex gap-4 overflow-x-auto no-scrollbar"><p class="text-gray-600 text-xs italic">購読中のroomはありません</p></div></div>
-                <div><h3 class="font-bold mb-3 text-lime">TOPクリエイター一覧</h3>
+                <div><h3 class="font-bold mb-3 text-lime">TOPクリエイター</h3>
                     <div id="home-creators" class="flex gap-6 overflow-x-auto no-scrollbar pb-2"></div></div>
             </div>
 
@@ -63,11 +62,10 @@
                 <div><h3 class="font-bold border-l-4 border-lime pl-2 mb-4">TOP 作品 40</h3><div class="grid grid-cols-2 gap-4" id="grid-top-works"></div></div>
                 <div><h3 class="font-bold border-l-4 border-lime pl-2 mb-4">TOP room 40</h3><div class="grid grid-cols-2 gap-4" id="grid-top-rooms"></div></div>
                 <div><h3 class="font-bold border-l-4 border-white pl-2 mb-4">最新の作品 40</h3><div class="grid grid-cols-2 gap-4" id="grid-latest"></div></div>
-                <div><h3 class="font-bold border-l-4 border-yellow-500 pl-2 mb-4">連続TOPの作品</h3><div class="grid grid-cols-2 gap-4" id="grid-streak"></div></div>
             </div>
         </section>
 
-        <section id="tab-live" class="tab-section p-6 flex flex-col items-center">
+        <section id="tab-live" class="tab-section hidden fade-in p-6 flex flex-col items-center">
             <div class="w-full flex justify-between items-start mb-6">
                 <div class="w-32 h-32 rounded-full bg-white/5 border-4 border-lime flex items-center justify-center text-5xl relative">
                     👤
@@ -94,14 +92,14 @@
                 <button onclick="setVoice('echo')" class="v-btn bg-white/10 py-3 rounded-xl text-xs font-bold">エコー</button>
                 <button onclick="setVoice('robot')" class="v-btn bg-white/10 py-3 rounded-xl text-xs font-bold">ロボット</button>
             </div>
-
+            
             <div class="mt-8 w-full flex-1 bg-white/5 rounded-t-3xl p-4 border-t border-white/10 min-h-[200px]">
                 <p class="text-[10px] text-gray-500 mb-2">視聴者からのコメント</p>
                 <div id="live-chat" class="space-y-2 text-sm text-gray-300">配信を始めるとコメントが流れます...</div>
             </div>
         </section>
 
-        <section id="tab-post" class="tab-section p-4 space-y-4">
+        <section id="tab-post" class="tab-section hidden fade-in p-4 space-y-4">
             <h2 class="text-2xl font-black border-b border-white/10 pb-2">作品を創る</h2>
             
             <div class="bg-white/5 h-40 rounded-3xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center relative overflow-hidden">
@@ -121,25 +119,29 @@
                     <option value="followers" class="bg-black">フォロワー限定</option>
                     <option value="private" class="bg-black">非公開 (自分のみ)</option>
                 </select>
-                <select id="post-room" class="bg-white/10 p-3 rounded-xl outline-none text-xs">
-                    <option value="none" class="bg-black">単作として投稿</option>
-                    <option value="new" class="bg-black">新しいroomを作る</option>
-                </select>
+                <div class="w-full flex flex-col gap-2">
+                    <select id="post-room-select" onchange="toggleRoomInput()" class="bg-white/10 p-3 rounded-xl outline-none text-xs w-full">
+                        <option value="none" class="bg-black">単作として投稿</option>
+                        <option value="new" class="bg-black">新しいroomを作る</option>
+                    </select>
+                </div>
             </div>
+            
+            <input type="text" id="new-room-name" placeholder="新しいroomの名前を入力..." class="hidden w-full bg-white/10 p-4 rounded-xl outline-none focus:ring-1 ring-lime text-sm">
 
-            <button onclick="submitWork()" class="w-full bg-lime text-black py-4 rounded-2xl font-black text-lg mt-4">すべて揃えて投稿する</button>
+            <button onclick="submitWork()" class="w-full bg-lime text-black py-4 rounded-2xl font-black text-lg mt-4 shadow-[0_5px_20px_rgba(166,242,26,0.3)]">すべて揃えて投稿する</button>
         </section>
 
-        <section id="tab-library" class="tab-section p-4">
+        <section id="tab-library" class="tab-section hidden fade-in p-4">
             <h2 class="text-2xl font-black mb-4">ライブラリ</h2>
             <div class="flex gap-4 border-b border-white/10 mb-4">
-                <button onclick="libTab('works')" id="l-btn-works" class="border-b-2 border-lime text-lime pb-2 px-2 text-sm">自分の作品</button>
-                <button onclick="libTab('bkm')" id="l-btn-bkm" class="text-gray-500 pb-2 px-2 text-sm">ブックマーク</button>
+                <button onclick="renderLibrary('works')" id="l-btn-works" class="border-b-2 border-lime text-lime pb-2 px-2 text-sm font-bold">自分の作品</button>
+                <button onclick="renderLibrary('bkm')" id="l-btn-bkm" class="text-gray-500 pb-2 px-2 text-sm font-bold">ブックマーク</button>
             </div>
             <div id="lib-content" class="grid grid-cols-2 gap-4"></div>
         </section>
 
-        <section id="tab-profile" class="tab-section p-6">
+        <section id="tab-profile" class="tab-section hidden fade-in p-6">
             <div class="flex items-center gap-6">
                 <div class="w-24 h-24 rounded-full bg-gray-800 border-2 border-lime relative overflow-hidden">
                     <input type="file" class="absolute inset-0 opacity-0 z-10" onchange="updateIcon(this)">
@@ -171,7 +173,7 @@
 
     </main>
 
-    <nav class="fixed bottom-0 w-full bg-black border-t border-white/10 flex justify-around p-4 z-50">
+    <nav class="fixed bottom-0 w-full bg-black/95 backdrop-blur-md border-t border-white/10 flex justify-around p-4 z-50">
         <button onclick="switchTab('home')" class="nav-btn text-lime"><i class="fa fa-house text-2xl"></i></button>
         <button onclick="switchTab('library')" class="nav-btn text-gray-600"><i class="fa fa-book text-2xl"></i></button>
         <button onclick="switchTab('post')" class="nav-btn text-gray-600"><i class="fa fa-pencil text-2xl"></i></button>
@@ -180,42 +182,38 @@
     </nav>
 
     <div id="modal-users" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col p-6 pt-12">
-        <div class="flex justify-between items-center mb-6">
-            <h2 id="modal-u-title" class="text-2xl font-black">一覧</h2>
-            <button onclick="hideModal('modal-users')" class="text-white"><i class="fa fa-times text-2xl"></i></button>
-        </div>
+        <div class="flex justify-between items-center mb-6"><h2 id="modal-u-title" class="text-2xl font-black">一覧</h2><button onclick="hideModal('modal-users')"><i class="fa fa-times text-2xl"></i></button></div>
         <div id="modal-u-list" class="flex-1 overflow-y-auto space-y-4"></div>
     </div>
-
     <div id="modal-terms" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-6">
-        <div class="bg-gray-900 p-8 rounded-3xl border border-white/10">
-            <h2 class="text-xl font-black mb-4 text-lime">利用規約</h2>
-            <ul class="text-sm space-y-2 text-gray-300 list-disc pl-4">
-                <li>著作権の責任は一切負いません。</li>
-                <li>商用利用に関する責任は一切負いません。</li>
-                <li>内容は適切かどうか確認してからにしてください。責任は負いません。</li>
-            </ul>
+        <div class="bg-gray-900 p-8 rounded-3xl border border-white/10"><h2 class="text-xl font-black mb-4 text-lime">利用規約</h2>
+            <ul class="text-sm space-y-2 text-gray-300 list-disc pl-4"><li>著作権の責任は一切負いません。</li><li>商用利用に関する責任は一切負いません。</li><li>内容は適切か確認してください。</li></ul>
             <button onclick="hideModal('modal-terms')" class="w-full bg-lime text-black font-bold py-3 rounded-xl mt-6">閉じる</button>
         </div>
     </div>
 
     <script>
-        // --- 1. データベース (LocalStorageで保存) ---
-        let db = JSON.parse(localStorage.getItem('N_NOTE_DATA')) || {
-            me: { name: 'あなた', bio: '', icon: '', following: [], followers: [] }, // フォロワー初期0人
+        let db = JSON.parse(localStorage.getItem('N_NOTE_DATA_V2')) || {
+            me: { name: 'あなた', bio: '', icon: '', following: [], followers: [] },
             works: [], bookmarks: [], rooms: [],
             settings: { like: true, comm: true, bkm: true, follow: true, sub: true },
-            users: { 'admin': { name: '運営', followers: 9999 } } // 運営アカウント
+            users: { 'admin': { name: '運営', followers: 9999 } }
         };
-        const save = () => localStorage.setItem('N_NOTE_DATA', JSON.stringify(db));
+        const save = () => localStorage.setItem('N_NOTE_DATA_V2', JSON.stringify(db));
 
-        // --- 2. タブ切り替え ---
+        // --- 確実なタブ切り替え ---
         function switchTab(tabId) {
-            // 画面の切り替え (全部隠して、選んだやつだけ表示)
-            document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
+            // 1. すべてのタブを完全に隠す (hiddenクラスを追加して、blockを消す)
+            const tabs = ['home', 'live', 'post', 'library', 'profile'];
+            tabs.forEach(id => {
+                document.getElementById('tab-' + id).classList.add('hidden');
+                document.getElementById('tab-' + id).classList.remove('block');
+            });
+            // 2. 選んだタブだけを完全に表示する
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.getElementById('tab-' + tabId).classList.add('block');
             
-            // アイコンの色変更
+            // アイコンの色
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.replace('text-lime', 'text-gray-600'));
             event.currentTarget.classList.replace('text-gray-600', 'text-lime');
 
@@ -224,219 +222,129 @@
             if(tabId === 'library') renderLibrary('works');
         }
 
-        // --- 3. ライブ機能 (Web Audio API でガチ音声加工) ---
+        // --- 録音・ライブ機能 ---
         let actx, mic, eff, isLive = false, vInt;
-        
         async function toggleRecording() {
             const btn = document.getElementById('btn-record');
             const badge = document.getElementById('live-badge');
-            
             if(!isLive) {
                 try {
-                    // マイクの許可と取得
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     actx = new (window.AudioContext || window.webkitAudioContext)();
                     mic = actx.createMediaStreamSource(stream);
                     eff = actx.createBiquadFilter();
-                    setVoice('normal'); // 初期はノーマル
-                    mic.connect(eff);
-                    eff.connect(actx.destination);
-                    
+                    setVoice('normal'); mic.connect(eff); eff.connect(actx.destination);
                     isLive = true;
                     btn.innerHTML = '<i class="fa fa-stop"></i> <span>録音を停止する</span>';
-                    btn.classList.replace('bg-white', 'bg-red-600');
-                    btn.classList.replace('text-black', 'text-white');
+                    btn.classList.replace('bg-white', 'bg-red-600'); btn.classList.replace('text-black', 'text-white');
                     badge.classList.remove('hidden');
-                    
-                    // 視聴者シミュレート
-                    let c = 0;
-                    vInt = setInterval(() => {
-                        c += Math.floor(Math.random() * 4);
-                        document.getElementById('live-viewers').innerText = c;
-                    }, 3000);
-                } catch(e) {
-                    alert("マイクの許可が必要です！");
-                }
+                    let c = 0; vInt = setInterval(() => { c += Math.floor(Math.random() * 4); document.getElementById('live-viewers').innerText = c; }, 3000);
+                } catch(e) { alert("マイクの許可が必要です！"); }
             } else {
-                // 停止処理
-                if(actx) actx.close();
-                isLive = false;
-                clearInterval(vInt);
-                document.getElementById('live-viewers').innerText = "0";
+                if(actx) actx.close(); isLive = false; clearInterval(vInt); document.getElementById('live-viewers').innerText = "0";
                 btn.innerHTML = '<i class="fa fa-microphone"></i> <span>録音を開始する</span>';
-                btn.classList.replace('bg-red-600', 'bg-white');
-                btn.classList.replace('text-white', 'text-black');
+                btn.classList.replace('bg-red-600', 'bg-white'); btn.classList.replace('text-white', 'text-black');
                 badge.classList.add('hidden');
             }
         }
-
         function setVoice(type) {
-            document.querySelectorAll('.v-btn').forEach(b => {
-                b.classList.remove('bg-lime', 'text-black');
-                b.classList.add('bg-white/10');
-            });
-            event.currentTarget.classList.remove('bg-white/10');
-            event.currentTarget.classList.add('bg-lime', 'text-black');
-            
+            document.querySelectorAll('.v-btn').forEach(b => { b.classList.replace('bg-lime', 'bg-white/10'); b.classList.replace('text-black', 'text-white'); });
+            event.currentTarget.classList.replace('bg-white/10', 'bg-lime'); event.currentTarget.classList.replace('text-white', 'text-black');
             if(!eff) return;
-            // 実際の波形加工設定
             if(type === 'echo') { eff.type = 'peaking'; eff.frequency.value = 500; eff.Q.value = 15; }
             else if(type === 'robot') { eff.type = 'bandpass'; eff.frequency.value = 1000; eff.Q.value = 30; }
             else { eff.type = 'allpass'; }
         }
 
-        async function shareScreen() {
-            try { await navigator.mediaDevices.getDisplayMedia({ video: true }); alert("画面共有を開始しました（プレビュー）"); }
-            catch(e) { console.log("共有キャンセル"); }
+        // --- 投稿・Room作成 ---
+        function toggleRoomInput() {
+            const select = document.getElementById('post-room-select');
+            const input = document.getElementById('new-room-name');
+            if(select.value === 'new') {
+                input.classList.remove('hidden'); // 入力欄を出す！
+            } else {
+                input.classList.add('hidden'); // 隠す
+            }
         }
-
-        // --- 4. 投稿機能 (全部揃わないとダメ) ---
         function previewImage(input) {
             if(input.files && input.files[0]) {
                 const r = new FileReader();
-                r.onload = e => {
-                    document.getElementById('post-preview').src = e.target.result;
-                    document.getElementById('post-preview').classList.remove('hidden');
-                    document.getElementById('post-placeholder').classList.add('hidden');
-                }
+                r.onload = e => { document.getElementById('post-preview').src = e.target.result; document.getElementById('post-preview').classList.remove('hidden'); document.getElementById('post-placeholder').classList.add('hidden'); }
                 r.readAsDataURL(input.files[0]);
             }
         }
-
         function submitWork() {
             const title = document.getElementById('post-title').value;
             const desc = document.getElementById('post-desc').value;
             const body = document.getElementById('post-body').value;
             const img = document.getElementById('post-preview').src;
             const privacy = document.getElementById('post-privacy').value;
+            const roomType = document.getElementById('post-room-select').value;
+            const roomName = document.getElementById('new-room-name').value;
 
-            if(!title || !desc || !body || !img || img.endsWith('html')) { // 画像がないとURLがhtmlになるため
-                return alert("表紙、タイトル、あらすじ、本文、すべて揃えないと投稿できません！");
+            if(!title || !desc || !body || !img || img.endsWith('html')) return alert("表紙、タイトル、あらすじ、本文、すべて揃えてください！");
+            if(roomType === 'new' && !roomName) return alert("新しいroomの名前を入力してください！");
+
+            let roomId = null;
+            if(roomType === 'new') {
+                roomId = 'room_' + Date.now();
+                db.rooms.push({ id: roomId, name: roomName, author: db.me.name, subs: 0 });
             }
 
-            db.works.unshift({
-                id: Date.now(), title, desc, body, cover: img,
-                author: db.me.name, likes: 0, privacy,
-                tags: document.getElementById('post-tags').value.split(',').map(t=>t.trim())
-            });
-            save();
-            alert("作品を公開しました！");
-            
-            // 入力リセット
-            document.getElementById('post-title').value = '';
-            document.getElementById('post-desc').value = '';
-            document.getElementById('post-body').value = '';
-            switchTab('home');
+            db.works.unshift({ id: Date.now(), title, desc, body, cover: img, author: db.me.name, likes: 0, privacy, roomId, tags: document.getElementById('post-tags').value.split(',').map(t=>t.trim()) });
+            save(); alert("公開しました！");
+            document.getElementById('post-title').value = ''; document.getElementById('post-desc').value = ''; document.getElementById('post-body').value = ''; document.getElementById('new-room-name').value = '';
+            document.querySelector('.nav-btn').click(); // ホームへ戻る
         }
 
-        // --- 5. プロフィール & フォロー ---
-        function renderProfile() {
-            document.getElementById('count-following').innerText = db.me.following.length;
-            document.getElementById('count-followers').innerText = db.me.followers.length;
-            if(db.me.bio) document.getElementById('my-bio').value = db.me.bio;
-            if(db.me.icon) {
-                document.getElementById('my-icon').src = db.me.icon;
-                document.getElementById('my-icon').classList.remove('hidden');
-            }
-
-            // TOPクリエイター称号の判定 (自分の作品がランキング40位以内にあるかシミュレート)
-            if(db.works.length > 5) document.getElementById('title-top').classList.remove('hidden');
-
-            const n = { like:'いいね', comm:'コメント', bkm:'ブックマーク', follow:'フォロー', sub:'購読' };
-            document.getElementById('settings-list').innerHTML = Object.keys(n).map(k => `
-                <div class="flex justify-between items-center">
-                    <span class="text-sm">${n[k]}</span>
-                    <input type="checkbox" ${db.settings[k] ? 'checked' : ''} onchange="toggleSet('${k}')" class="w-6 h-6 accent-lime">
-                </div>
-            `).join('');
-        }
-        function toggleSet(k) { db.settings[k] = !db.settings[k]; save(); }
-        function saveBio() { db.me.bio = document.getElementById('my-bio').value; save(); }
-        function updateIcon(input) {
-            if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => { db.me.icon = e.target.result; save(); renderProfile(); }
-                r.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function openUsers(type) {
-            const list = type === 'following' ? db.me.following : db.me.followers;
-            document.getElementById('modal-u-title').innerText = type === 'following' ? 'フォロー中' : 'フォロワー';
-            document.getElementById('modal-u-list').innerHTML = list.length ? list.map(u => `
-                <div class="bg-white/10 p-4 rounded-xl flex justify-between items-center">
-                    <span>${u}</span>
-                    <button class="text-xs bg-black px-3 py-1 rounded-full">プロフ</button>
-                </div>
-            `).join('') : '<p class="text-gray-500 text-center mt-10">まだいません</p>';
-            showModal('modal-users');
-        }
-
-        function attemptFollow(target) {
-            if(target === 'admin') return alert("運営アカウントはフォローできません。");
-            if(!db.me.following.includes(target)) {
-                db.me.following.push(target); save(); renderProfile(); alert(target + "をフォローしました");
-            }
-        }
-
-        // --- 6. ライブラリ & ホーム描画 ---
+        // --- ホームとUI ---
         function renderHome() {
-            // 公開されている作品のみ表示
             const pubWorks = db.works.filter(w => w.privacy === 'public');
             const mkCard = w => `
-                <div class="bg-white/5 rounded-2xl overflow-hidden">
-                    <img src="${w.cover}" class="w-full h-32 object-cover">
-                    <div class="p-2 space-y-1">
-                        <p class="font-bold text-xs truncate">${w.title}</p>
-                        <p class="text-[10px] text-gray-500">by ${w.author}</p>
-                        <div class="flex justify-between mt-1">
-                            <span class="text-[10px] text-lime" onclick="likeWork(${w.id})"><i class="fa fa-heart"></i> ${w.likes}</span>
-                            <i class="fa fa-bookmark text-gray-500 text-[10px]" onclick="bkmWork(${w.id})"></i>
+                <div class="bg-white/5 rounded-2xl overflow-hidden shadow-lg border border-white/5">
+                    <img src="${w.cover}" class="w-full h-36 object-cover">
+                    <div class="p-3">
+                        <p class="font-bold text-sm truncate">${w.title}</p>
+                        <p class="text-[10px] text-gray-500 mt-1">by ${w.author}</p>
+                        <div class="flex justify-between mt-2 items-center">
+                            <span class="text-xs text-lime cursor-pointer" onclick="likeWork(${w.id})"><i class="fa fa-heart"></i> ${w.likes}</span>
+                            <i class="fa fa-bookmark text-gray-400 text-sm cursor-pointer" onclick="bkmWork(${w.id})"></i>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             document.getElementById('grid-latest').innerHTML = pubWorks.map(mkCard).join('') || '<p class="col-span-2 text-xs text-gray-500">作品がありません</p>';
         }
-
-        function likeWork(id) {
-            const w = db.works.find(x => x.id === id);
-            if(w && !w.liked) { w.likes++; w.liked = true; save(); renderHome(); }
-            else { alert("1ユーザー1いいねまでです！"); }
+        function renderProfile() {
+            document.getElementById('count-following').innerText = db.me.following.length; document.getElementById('count-followers').innerText = db.me.followers.length;
+            if(db.me.bio) document.getElementById('my-bio').value = db.me.bio;
+            if(db.me.icon) { document.getElementById('my-icon').src = db.me.icon; document.getElementById('my-icon').classList.remove('hidden'); }
+            if(db.works.length > 5) document.getElementById('title-top').classList.remove('hidden');
+            const n = { like:'いいね', comm:'コメント', bkm:'ブックマーク', follow:'フォロー', sub:'購読' };
+            document.getElementById('settings-list').innerHTML = Object.keys(n).map(k => `<div class="flex justify-between items-center"><span class="text-sm">${n[k]}</span><input type="checkbox" ${db.settings[k] ? 'checked' : ''} onchange="toggleSet('${k}')" class="w-6 h-6 accent-lime"></div>`).join('');
         }
-        function bkmWork(id) {
-            if(!db.bookmarks.includes(id)) { db.bookmarks.push(id); save(); alert("ブックマークしました"); }
-        }
-
         function renderLibrary(mode) {
-            document.getElementById('l-btn-works').className = mode === 'works' ? "border-b-2 border-lime text-lime pb-2 px-2 text-sm" : "text-gray-500 pb-2 px-2 text-sm";
-            document.getElementById('l-btn-bkm').className = mode === 'bkm' ? "border-b-2 border-lime text-lime pb-2 px-2 text-sm" : "text-gray-500 pb-2 px-2 text-sm";
-            
+            document.getElementById('l-btn-works').className = mode === 'works' ? "border-b-2 border-lime text-lime pb-2 px-2 text-sm font-bold" : "text-gray-500 pb-2 px-2 text-sm font-bold";
+            document.getElementById('l-btn-bkm').className = mode === 'bkm' ? "border-b-2 border-lime text-lime pb-2 px-2 text-sm font-bold" : "text-gray-500 pb-2 px-2 text-sm font-bold";
             let list = mode === 'works' ? db.works : db.works.filter(w => db.bookmarks.includes(w.id));
             document.getElementById('lib-content').innerHTML = list.map(w => `
-                <div class="bg-white/5 rounded-2xl overflow-hidden relative">
+                <div class="bg-white/5 rounded-2xl overflow-hidden relative border border-white/5">
                     <img src="${w.cover}" class="w-full h-32 object-cover">
-                    <div class="p-2">
-                        <p class="font-bold text-xs truncate">${w.title}</p>
-                        <p class="text-[10px] text-gray-400 mt-1">${w.privacy === 'private' ? '🔒非公開' : '🌐公開中'}</p>
-                    </div>
-                    ${mode === 'works' ? `<button onclick="deleteWork(${w.id})" class="absolute top-2 right-2 bg-red-600 w-6 h-6 rounded-full flex items-center justify-center text-xs"><i class="fa fa-trash"></i></button>` : ''}
-                </div>
-            `).join('') || '<p class="col-span-2 text-xs text-gray-500">データがありません</p>';
+                    <div class="p-2"><p class="font-bold text-xs truncate">${w.title}</p><p class="text-[10px] text-gray-400 mt-1">${w.privacy === 'private' ? '🔒非公開' : '🌐公開中'}</p></div>
+                    ${mode === 'works' ? `<button onclick="deleteWork(${w.id})" class="absolute top-2 right-2 bg-red-600 w-6 h-6 rounded-full flex items-center justify-center text-xs shadow-lg"><i class="fa fa-trash"></i></button>` : ''}
+                </div>`).join('') || '<p class="col-span-2 text-xs text-gray-500">データがありません</p>';
         }
-
-        function deleteWork(id) {
-            if(confirm("本当に削除しますか？")) {
-                db.works = db.works.filter(w => w.id !== id);
-                save(); renderLibrary('works');
-            }
-        }
-
-        // モーダル操作
+        function likeWork(id) { const w = db.works.find(x => x.id === id); if(w && !w.liked) { w.likes++; w.liked = true; save(); renderHome(); } else alert("1ユーザー1いいねまで！"); }
+        function bkmWork(id) { if(!db.bookmarks.includes(id)) { db.bookmarks.push(id); save(); alert("ブックマークしました"); } }
+        function deleteWork(id) { if(confirm("本当に削除しますか？")) { db.works = db.works.filter(w => w.id !== id); save(); renderLibrary('works'); } }
+        function openUsers(t) { const list = t === 'following' ? db.me.following : db.me.followers; document.getElementById('modal-u-title').innerText = t === 'following' ? 'フォロー中' : 'フォロワー'; document.getElementById('modal-u-list').innerHTML = list.length ? list.map(u => `<div class="bg-white/10 p-4 rounded-xl flex justify-between items-center"><span>${u}</span><button class="text-[10px] bg-black px-3 py-1 rounded-full">プロフ</button></div>`).join('') : '<p class="text-gray-500 text-center mt-10">まだいません</p>'; showModal('modal-users'); }
+        function updateIcon(input) { if(input.files && input.files[0]) { const r = new FileReader(); r.onload = e => { db.me.icon = e.target.result; save(); renderProfile(); }; r.readAsDataURL(input.files[0]); } }
+        function saveBio() { db.me.bio = document.getElementById('my-bio').value; save(); }
+        function toggleSet(k) { db.settings[k] = !db.settings[k]; save(); }
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        // 初期表示
+        async function shareScreen() { try { await navigator.mediaDevices.getDisplayMedia({ video: true }); alert("画面共有を開始しました（プレビュー）"); } catch(e) { } }
+        
+        // 初期実行
         renderHome();
     </script>
 </body>
